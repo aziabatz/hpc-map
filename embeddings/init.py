@@ -4,6 +4,7 @@ import torch.nn as nn
 
 from node2vec.node2vec import Node2Vec
 
+# TODO: Check if we need to handle torch.Tensor instead of np.ndarray
 
 class MappingInitEmbedding(nn.Module):
     """
