@@ -20,5 +20,7 @@ class MappingContextEmbedding(EnvContext):
     """
 
     def _state_embedding(self, embeddings, td):
-        total_placed = td['total_placed']
-        return total_placed
+        total_placed = td['i']
+        current_placement = td['current_placement']
+
+        return torch.cat([total_placed, current_placement], -1)
