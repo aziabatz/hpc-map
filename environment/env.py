@@ -42,6 +42,10 @@ class MappingEnv(RL4COEnvBase):
         self.tmat_class = tmat_class
         self.max_machine_capacity= max_machine_capacity
         self.num_machines = num_machines
+        
+        self.node_capacities = None
+        self.current_placement = None
+        
         self._make_spec(td_params)
         
     def _reset(self, td: Optional[TensorDict] = None, batch_size=None) -> TensorDict:
@@ -71,10 +75,10 @@ class MappingEnv(RL4COEnvBase):
         i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
 
         # Generate node capacities tensor
-        node_capacities = torch.randint(low=0, high=self.max_machine_capacity, size=(*batch_size, self.num_machines))
+        self.node_capacities = node_capacities = torch.randint(low=0, high=self.max_machine_capacity, size=(*batch_size, self.num_machines))
 
         # Generate current placement tensor
-        current_placement = torch.full(size=(*batch_size, self.num_procs), fill_value=-1)
+        self.current_placement = current_placement = torch.full(size=(*batch_size, self.num_procs), fill_value=-1)
 
         return TensorDict(
             {
@@ -90,19 +94,19 @@ class MappingEnv(RL4COEnvBase):
             batch_size=batch_size,
         )
 
-    @staticmethod
-    def _step(td: TensorDict) -> TensorDict:
+    def _step(self, td: TensorDict) -> TensorDict:
         current_node = td["action"]
         first_node = current_node if batch_to_scalar(td["i"]) == 0 else td["first_node"]
- 
-        # Set not visited to 0 (i.e., we visited the node)
-        # TODO CUSTOM MASK FUNCTION
-        available = td["action_mask"].scatter(
-            -1, current_node.unsqueeze(-1).expand_as(td["action_mask"]), 0
-        )
+
+
+        available = self.get_action_mask(td)
+        # available = td["action_mask"].scatter(
+        #     -1, current_node.unsqueeze(-1).expand_as(td["action_mask"]), 0
+        # )
+        
 
         # We are done there are no unvisited locations
-        done = torch.count_nonzero(available, dim=-1) <= 0
+        done = self.get_done_state(self.node_capacities, td['i']+1)
 
         # The reward is calculated outside via get_reward for efficiency, so we set it to 0 here
         reward = torch.zeros_like(done)
@@ -116,17 +120,24 @@ class MappingEnv(RL4COEnvBase):
                 "reward": reward,
                 "done": done,
 
-                "node_capacities": node_capacities,
-                "current_placement": current_placement,
+                "node_capacities": self.node_capacities,
+                "current_placement": self.current_placement,
             },
         )
         return td
 
-    def get_action_mask(self, td: TensorDict, batch_size, device) -> torch.Tensor:
+    def get_action_mask(self, td: TensorDict) -> torch.Tensor:
         left_capacities = td['node_capacities']
-        
         available_nodes = left_capacities > 0
         return available_nodes
+
+    def get_done_state(self, capacities: torch.Tensor, i: int) -> torch.Tensor:
+        all_processes_placed = i == self.num_procs
+        all_nodes_full = torch.count_nonzero(capacities, -1) == self.num_machines
+
+        done = all_processes_placed or all_nodes_full
+
+        return done
 
     def _make_spec(self, td_params: TensorDict = None):
         self.observation_spec = CompositeSpec(
