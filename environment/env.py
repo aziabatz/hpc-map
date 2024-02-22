@@ -43,6 +43,52 @@ class MappingEnv(RL4COEnvBase):
         self.max_machine_capacity= max_machine_capacity
         self.num_machines = num_machines
         self._make_spec(td_params)
+        
+    def _reset(self, td: Optional[TensorDict] = None, batch_size=None) -> TensorDict:
+        # Initialize distance matrix
+        cost_matrix = (
+            td["cost_matrix"] if td is not None else None
+        )
+        
+        if batch_size is None:
+            batch_size = (
+                # We take the first dim size from cost_matrix
+                self.batch_size if cost_matrix is None else cost_matrix.shape[:-2]
+            )
+        device = cost_matrix.device if cost_matrix is not None else self.device
+        self.to(device)
+
+        generated_data = self.generate_data(batch_size=batch_size).to(device)
+
+        if cost_matrix is None:
+            cost_matrix = generated_data["cost_matrix"]
+
+        # Other variables
+        current_node = torch.zeros(batch_size, dtype=torch.int64, device=device)
+        available = self.get_action_mask()
+        
+        # The timestep
+        i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
+
+        # Generate node capacities tensor
+        node_capacities = torch.randint(low=0, high=self.max_machine_capacity, size=(*batch_size, self.num_machines))
+
+        # Generate current placement tensor
+        current_placement = torch.full(size=(*batch_size, self.num_procs), fill_value=-1)
+
+        return TensorDict(
+            {
+                "cost_matrix": cost_matrix,
+                "first_node": current_node,
+                "current_node": current_node,
+                "i": i,
+                "action_mask": available,
+
+                "node_capacities": node_capacities,
+                "current_placement": current_placement,
+            },
+            batch_size=batch_size,
+        )
 
     @staticmethod
     def _step(td: TensorDict) -> TensorDict:
@@ -76,46 +122,11 @@ class MappingEnv(RL4COEnvBase):
         )
         return td
 
-    def _reset(self, td: Optional[TensorDict] = None, batch_size=None) -> TensorDict:
-        # Initialize distance matrix
-        cost_matrix = (
-            td["cost_matrix"] if td is not None else None
-        )
-        if batch_size is None:
-            batch_size = (
-                self.batch_size if cost_matrix is None else cost_matrix.shape[:-2]
-            )
-        device = cost_matrix.device if cost_matrix is not None else self.device
-        self.to(device)
-
-        generated_data = self.generate_data(batch_size=batch_size).to(device)
-
-        if cost_matrix is None:
-            cost_matrix = generated_data["cost_matrix"]
-
-        # Other variables
-        current_node = torch.zeros(batch_size, dtype=torch.int64, device=device)
-        available = torch.ones(
-            (*batch_size, self.num_procs), dtype=torch.bool, device=device
-        )  # 1 means not visited, i.e. action is allowed
-        i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
-
-        node_capacities = generated_data['node_capacities']
-        current_placement = generated_data['current_placement']
-
-        return TensorDict(
-            {
-                "cost_matrix": cost_matrix,
-                "first_node": current_node,
-                "current_node": current_node,
-                "i": i,
-                "action_mask": available,
-
-                "node_capacities": node_capacities,
-                "current_placement": current_placement,
-            },
-            batch_size=batch_size,
-        )
+    def get_action_mask(self, td: TensorDict, batch_size, device) -> torch.Tensor:
+        left_capacities = td['node_capacities']
+        
+        available_nodes = left_capacities > 0
+        return available_nodes
 
     def _make_spec(self, td_params: TensorDict = None):
         self.observation_spec = CompositeSpec(
@@ -167,6 +178,8 @@ class MappingEnv(RL4COEnvBase):
 
     def get_reward(self, td, actions) -> TensorDict:
         distance_matrix = td["cost_matrix"]
+        
+        #Check we only visit every node once
         assert (
             torch.arange(actions.size(1), out=actions.data.new())
             .view(1, -1)
@@ -203,16 +216,10 @@ class MappingEnv(RL4COEnvBase):
                 if (dms == old_dms).all():
                     break
 
-        # Generate node capacities tensor
-        machine_caps = torch.randint(low=0, high=self.max_machine_capacity, size=(*batch_size, self.num_machines))
-
-        # Generate current placement tensor
-        placement = torch.full(size=(*batch_size, self.num_procs), fill_value=-1)
+        
 
         return TensorDict({
             "cost_matrix": dms,
-            "node_capacities": machine_caps,
-            "current_placement": placement,
             }, batch_size=batch_size)
 
     @staticmethod
