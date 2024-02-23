@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+from torch import Tensor
 import torch.nn as nn
 
 from node2vec.node2vec import Node2Vec
@@ -58,7 +59,6 @@ class MappingInitEmbedding(nn.Module):
 
         self.normalize = normalize
 
-    @property
     def embedded(self, matrix):
         """
         Generates or retrieves already computed embeddings for a given matrix.
@@ -73,8 +73,7 @@ class MappingInitEmbedding(nn.Module):
             self.embedded_matrix = self.embed_matrix(matrix)
         return self.embedded_matrix
 
-    @property
-    def nx_graph(self, cost_matrix):
+    def nx_graph(self, cost_matrix: Tensor):
         """
         Generates a NetworkX graph from a given cost matrix, optionally normalizing the matrix.
 
@@ -85,23 +84,29 @@ class MappingInitEmbedding(nn.Module):
             nx.Graph: The generated graph with weighted edges based on the cost matrix.
         """
         if self.normalize:
-            mat_min = self.cost_matrix.min()
-            mat_max = self.cost_matrix.max()
+            mat_min = cost_matrix.min()
+            mat_max = cost_matrix.max()
             cost_matrix = (cost_matrix - mat_min) / (mat_max - mat_min)
 
-        edges = list()
-        weights = list()
+        batch_size = cost_matrix.size(0)
+        edges = [[] for _ in range(batch_size)]
+        weights = [[] for _ in range(batch_size)]
 
-        for i in range(len(cost_matrix)):
-            for j in range(len(cost_matrix)):
-                if cost_matrix[i, j] != 0:
-                    edges.append((i + 1, j + 1))
-                    weights.append(i + 1, j + 1, cost_matrix[i, j])
+        graphs = []
 
-        G = nx.Graph()
-        G.add_weighted_edges_from(weights)
+        for batch in range(batch_size):
+            for i in range(len(cost_matrix[batch])):
+                for j in range(len(cost_matrix[batch])):
+                    cost = cost_matrix[batch, i, j]
+                    if cost != 0:
+                        edges[batch].append((i + 1, j + 1))
+                        weights[batch].append((i + 1, j + 1, cost))
 
-        return G
+            G = nx.Graph()
+            G.add_weighted_edges_from(weights[batch])
+            graphs.append(G)
+
+        return graphs
 
     def embed_matrix(self, matrix):
         """
@@ -113,12 +118,17 @@ class MappingInitEmbedding(nn.Module):
         Returns:
             np.ndarray: The generated embeddings for the matrix.
         """
-        if self.n2v_model is None:
-            G = self.nx_graph(matrix)
-            self.n2v = Node2Vec(G, **self.n2v_kwargs)
-            self.n2v_model = self.n2v.fit(**self.w2v_kwargs)
+        embeddings = []
+        graphs = self.nx_graph(matrix)
+        self.n2v = []
+        self.n2v_model = []
 
-        return self.n2v_model.wv.vectors
+        for nxg in graphs:
+            n2v = Node2Vec(nxg, **self.n2v_kwargs)
+            model = n2v.fit(**self.w2v_kwargs)
+            embeddings.append(model.wv.vectors)
+
+        return embeddings
 
     def forward(self, td):
         """
@@ -132,7 +142,7 @@ class MappingInitEmbedding(nn.Module):
         Returns:
             np.ndarray: The embeddings for the given cost matrix.
         """
-        recompute = td["recompute"]
+        recompute = False #td["recompute"]
         matrix = td["cost_matrix"]
 
         if recompute is True:
@@ -140,4 +150,4 @@ class MappingInitEmbedding(nn.Module):
             self.n2v_model = (None,)
             self.embedded_matrix = None
 
-        return self.embedded(matrix)
+        return Tensor(self.embedded(matrix))
