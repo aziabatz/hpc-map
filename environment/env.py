@@ -28,7 +28,7 @@ class MappingEnv(RL4COEnvBase):
         self,
         num_procs: int = 32,
         min_cost: float = 0,
-        max_cost: float = 1,
+        max_cost: float = 1024,
         num_machines: int = 4,
         max_machine_capacity = 8,
         tmat_class: bool = True,
@@ -69,7 +69,7 @@ class MappingEnv(RL4COEnvBase):
 
         # Other variables
         current_node = torch.zeros(batch_size, dtype=torch.int64, device=device)
-        available = self.get_action_mask()
+        available = torch.ones(size=(*batch_size, self.num_machines))
         
         # The timestep
         i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
@@ -212,9 +212,9 @@ class MappingEnv(RL4COEnvBase):
         # We satifsy the triangle inequality (TMAT class) in a batch
         batch_size = [batch_size] if isinstance(batch_size, int) else batch_size
         dms = (
-            torch.rand((*batch_size, self.num_procs, self.num_procs), generator=self.rng)
-            * (self.max_cost - self.min_cost)
-            + self.min_cost
+            torch.randint(low=0, high=self.max_cost, size=(*batch_size, self.num_procs, self.num_procs), generator=self.rng)
+            # * (self.max_cost - self.min_cost)
+            # + self.min_cost
         )
         dms[..., torch.arange(self.num_procs), torch.arange(self.num_procs)] = 0
         log.info("Using TMAT class (triangle inequality): {}".format(self.tmat_class))
