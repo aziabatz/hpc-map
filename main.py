@@ -1,5 +1,5 @@
 import torch
-from rl4co.models import AttentionModelPolicy
+from rl4co.models import AttentionModelPolicy, AutoregressivePolicy
 
 import wandb
 
@@ -8,8 +8,10 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 # Para mostrar un log de la estructura de la red
 from lightning.pytorch.callbacks import RichModelSummary
 
-from embeddings.init_node2vec import MappingInitEmbedding
-from environment.atsp import MappingEnv
+from embeddings.init import MappingInitEmbedding
+from embeddings.context import MappingContextEmbedding
+from embeddings.dynamic import MappingDynamicEmbedding
+from environment.env import MappingEnv
 
 from rl4co.envs import ATSPEnv, TSPEnv
 from rl4co.models.zoo.ppo.model import PPOModel
@@ -24,16 +26,22 @@ if __name__ == '__main__':
     # wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
 
     # Split Delivery Vehicle Routing Problem
-    env = MappingEnv(num_procs=1000)
+    env = MappingEnv(num_procs=8)
+
+    
 
     n2v_init = MappingInitEmbedding(
-        env.num_procs,
         embedding_dim=128,
         linear_bias=True
     )
 
-    policy = AttentionModelPolicy(env.name,
-                       init_embedding=n2v_init)
+    context = MappingContextEmbedding(embedding_dim=128)
+    dynamic = MappingDynamicEmbedding(embedding_dim=128, num_nodes=2)
+
+    policy = AutoregressivePolicy(env.name,
+                       init_embedding=n2v_init,
+                       context_embedding=context,
+                       dynamic_embedding=dynamic)
 
     model = AttentionModel(env,
                            policy=policy,
