@@ -69,7 +69,7 @@ class MappingEnv(RL4COEnvBase):
 
         # Other variables
         current_node = torch.zeros(*batch_size, dtype=torch.int64, device=device)
-        available = torch.ones(size=(*batch_size, self.num_machines))
+        available = torch.ones(size=(*batch_size, self.num_machines), dtype=torch.bool)
         
         # The timestep
         i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
