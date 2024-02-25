@@ -10,7 +10,8 @@ class MappingContextEmbedding(EnvContext):
     def __init__(self, embedding_dim, step_context_dim=None, linear_bias=False):
         super(MappingContextEmbedding, self).__init__(
             embedding_dim=embedding_dim,
-            step_context_dim=embedding_dim+1
+            step_context_dim=step_context_dim
+            #step_context_dim=embedding_dim+1
         )
         
     """
@@ -20,7 +21,8 @@ class MappingContextEmbedding(EnvContext):
     """
 
     def _state_embedding(self, embeddings, td):
-        total_placed = td['i']
-        current_placement = td['current_placement']
+        # total_placed = td['i']
+        # current_placement = td['current_placement']
 
-        return torch.cat([total_placed, current_placement], -1)
+        # return torch.cat([total_placed, current_placement], -1).squeeze(0)
+        return td['current_placement'] # 8

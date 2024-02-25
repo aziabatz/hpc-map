@@ -68,7 +68,7 @@ class MappingEnv(RL4COEnvBase):
             cost_matrix = generated_data["cost_matrix"]
 
         # Other variables
-        current_node = torch.zeros(batch_size, dtype=torch.int64, device=device)
+        current_node = torch.zeros(*batch_size, dtype=torch.int64, device=device)
         available = torch.ones(size=(*batch_size, self.num_machines))
         
         # The timestep
