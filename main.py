@@ -19,6 +19,7 @@ from rl4co.models.zoo.ppo.model import PPOModel
 from rl4co.models.zoo import AttentionModel
 from rl4co.utils.trainer import RL4COTrainer
 from rl4co.models.zoo.ppo import PPOPolicy
+from rl4co.models.nn.env_embeddings.dynamic import StaticEmbedding
 
 from lightning.pytorch.loggers import WandbLogger
 
@@ -28,24 +29,24 @@ if __name__ == "__main__":
 
     # Split Delivery Vehicle Routing Problem
     env = MappingEnv(num_procs=8)
-    
+
     n2v_init = MappingInitEmbedding(embedding_dim=128, linear_bias=True)
 
-    context = MappingContextEmbedding(step_context_dim=136, embedding_dim=128)
-    dynamic = MappingDynamicEmbedding(embedding_dim=128, num_nodes=2)
+    context = MappingContextEmbedding(step_context_dim=140, embedding_dim=128)
+    # dynamic = MappingDynamicEmbedding(embedding_dim=128, num_nodes=2)
 
     policy = AutoregressivePolicy(
         env.name,
         init_embedding=n2v_init,
         context_embedding=context,
-        dynamic_embedding=dynamic,
+        dynamic_embedding=StaticEmbedding(),
     )
 
     model = AttentionModel(
         env,
         policy=policy,
-        train_data_size=1000,
-        val_data_size=100,
+        train_data_size=100,
+        val_data_size=10,
         optimizer_kwargs={"lr": 1e-4},
     )
 
@@ -53,15 +54,15 @@ if __name__ == "__main__":
     if torch.cuda.is_available():
         device = "cuda"
 
-    td_init = env.reset(batch_size=[2]).to(device)
-    model = model.to(device)
-    out = model(
-        td_init.clone(), phase="test", decode_type="greedy", return_actions=True
-    )
+    # td_init = env.reset(batch_size=[2]).to(device)
+    # model = model.to(device)
+    # out = model(
+    #     td_init.clone(), phase="test", decode_type="greedy", return_actions=True
+    # )
 
-    print(f"Tour lengths: {[f'{-r.item():.2f}' for r in out['reward']]}")
-    for td, actions in zip(td_init, out["actions"].cpu()):
-        env.render(td, actions)
+    # print(f"Tour lengths: {[f'{-r.item():.2f}' for r in out['reward']]}")
+    # for td, actions in zip(td_init, out["actions"].cpu()):
+    #     env.render(td, actions)
 
     # Training
 
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     )  # TensorBoardLogger('tb_logs', name='atsp')
 
     trainer = RL4COTrainer(
-        max_epochs=2, accelerator="auto", callbacks=callbacks, devices=1, logger=None
+        max_epochs=3, accelerator="auto", callbacks=callbacks, devices=1, logger=None
     )
 
     trainer.fit(model)

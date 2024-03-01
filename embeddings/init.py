@@ -7,6 +7,7 @@ from node2vec.node2vec import Node2Vec
 
 # TODO: Check if we need to handle torch.Tensor instead of np.ndarray
 
+
 class MappingInitEmbedding(nn.Module):
     """
     A class for initializing and obtaining vector embeddings for cost matrices using Node2Vec.
@@ -45,10 +46,10 @@ class MappingInitEmbedding(nn.Module):
         super(MappingInitEmbedding, self).__init__()
 
         if n2v_kwargs is None:
-            n2v_kwargs = dict(dimensions=embedding_dim, num_walks=200, workers=4)
+            n2v_kwargs = dict(dimensions=embedding_dim, num_walks=10, workers=4)
 
         if w2v_kwargs is None:
-            w2v_kwargs = dict(window=64, min_count=2, batch_words=4)
+            w2v_kwargs = dict(window=64, min_count=5, batch_words=4)
 
         self.n2v_kwargs = n2v_kwargs
         self.w2v_kwargs = w2v_kwargs
@@ -142,7 +143,7 @@ class MappingInitEmbedding(nn.Module):
         Returns:
             np.ndarray: The embeddings for the given cost matrix.
         """
-        recompute = False #td["recompute"]
+        recompute = False  # td["recompute"]
         matrix = td["cost_matrix"]
 
         if recompute is True:

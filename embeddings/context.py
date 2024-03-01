@@ -10,19 +10,25 @@ class MappingContextEmbedding(EnvContext):
     def __init__(self, embedding_dim, step_context_dim=None, linear_bias=False):
         super(MappingContextEmbedding, self).__init__(
             embedding_dim=embedding_dim,
-            step_context_dim=step_context_dim
-            #step_context_dim=embedding_dim+1
+            step_context_dim=step_context_dim,
+            # step_context_dim=embedding_dim+1
         )
-        
+
     """
         TODO: Here we can add from Node2Vec the embedded node vectors for the first and current node.
         TODO: If dynamic embedding doesnt help, add node capacities as context for the problem partial solution
         TODO: Also we can add the placement array as part of the context embedding
     """
 
-    def _state_embedding(self, embeddings, td):
-        # total_placed = td['i']
-        # current_placement = td['current_placement']
+    def _state_embedding(self, embeddings: torch.Tensor, td):
+        # current_node = td["current_node"]  # batch
+        # batch_size = current_node.size(0)
 
-        # return torch.cat([total_placed, current_placement], -1).squeeze(0)
-        return td['current_placement'] # 8
+        # node = torch.gather(embeddings, 0, current_node)
+        # current_node_embeddings = embeddings[torch.arange(batch_size), current_node]
+        current_placement = td["current_placement"]
+        node_capacities = td["node_capacities"]
+
+        state = torch.cat((current_placement, node_capacities), dim=1)
+
+        return state
