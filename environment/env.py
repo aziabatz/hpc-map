@@ -107,12 +107,12 @@ class MappingEnv(RL4COEnvBase):
         # Obtain where can we place this process
         machine_index = self.proc_to_machine(td).long()
         batch_index = torch.arange(machine_index.size(0)).long()
-        print(
-            batch_index.shape,
-            action.shape,
-            machine_index.shape,
-            self.current_placement.shape,
-        )
+        # print(
+        #     batch_index.shape,
+        #     action.shape,
+        #     machine_index.shape,
+        #     self.current_placement.shape,
+        # )
         # Decrement machine capacity
         self.node_capacities[batch_index, machine_index] -= 1
         # Assign process to machine
@@ -137,8 +137,10 @@ class MappingEnv(RL4COEnvBase):
             },
         )
 
-        print(self.current_placement[0])
-        print(self.node_capacities[0])
+        # print("::::::::::::::::::::::::")
+        # for key, value in td.items():
+        #     print(f"{key}:: {value}")
+        # print("::::::::::::::::::::::::")
 
         return td
 
@@ -217,7 +219,6 @@ class MappingEnv(RL4COEnvBase):
         # print(steps)
 
         cumulative_caps = torch.cumsum(capacities, dim=1)
-        print(cumulative_caps)
 
         # # Check for the first machine that can acommodate a process
         # # cumsum > steps if steps == 0, cumsum >= steps if steps > 0
@@ -233,24 +234,28 @@ class MappingEnv(RL4COEnvBase):
         return machine_index
 
     def get_reward(self, td, actions) -> TensorDict:
-        distance_matrix = td["cost_matrix"]
 
-        # Check we only visit every node once
-        assert (
-            torch.arange(actions.size(1), out=actions.data.new())
-            .view(1, -1)
-            .expand_as(actions)
-            == actions.data.sort(1)[0]
-        ).all(), "Invalid tour"
+        cost_matrix = td["cost_matrix"]
+        current_placement = td["current_placement"]
 
-        # Get indexes of tour edges
-        nodes_src = actions
-        nodes_tgt = torch.roll(actions, 1, dims=1)
-        batch_idx = torch.arange(
-            distance_matrix.shape[0], device=distance_matrix.device
-        ).unsqueeze(1)
-        # return negative tour length
-        return -distance_matrix[batch_idx, nodes_src, nodes_tgt].sum(-1)
+        # Mask for processes in different nodes only
+        node_diff_mask = current_placement.unsqueeze(-1) != current_placement.unsqueeze(
+            -2
+        )
+
+        # Concat cost matrix with current placement
+        expanded_cost_matrix = cost_matrix[current_placement, :][
+            :, :, current_placement
+        ]
+
+        # Apply mask to cost for messages through different nodes
+        communication_costs = expanded_cost_matrix * node_diff_mask
+
+        # Total sum of all cost (for each batch)
+        total_communication_cost = communication_costs.sum(dim=(-2, -1))
+        reward = -total_communication_cost
+
+        return reward.float()
 
     def generate_data(self, batch_size) -> TensorDict:
         # Generate distance matrices inspired by the reference MatNet (Kwon et al., 2021)
@@ -266,6 +271,7 @@ class MappingEnv(RL4COEnvBase):
             # * (self.max_cost - self.min_cost)
             # + self.min_cost
         )
+        # TODO Add a new parameter sparsity?
         dms[..., torch.arange(self.num_procs), torch.arange(self.num_procs)] = 0
         log.info("Using TMAT class (triangle inequality): {}".format(self.tmat_class))
         if self.tmat_class:
