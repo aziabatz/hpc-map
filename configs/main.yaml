@@ -1,0 +1,43 @@
+
+# @package _global_
+
+defaults:
+  - _self_
+  - callbacks: default.yaml
+  - logger: wandb.yaml
+  - trainer: default.yaml
+  - paths: default.yaml
+  - model: default.yaml
+  - env: default.yaml
+
+  - experiment: base.yaml
+  
+  - hparams_search: null
+
+  - optional local: default.yaml
+  - debug: null
+
+mode: "train"
+tags: ["dev"]
+
+train: True
+test: True
+
+compile: False
+ckpt_path: null
+
+seed: null
+
+matmul_precision: "medium"
+
+metrics:
+  train: ["loss", "reward"]
+  val: ["reward"]
+  test: ["reward"]
+  log_on_step: True
+
+model:
+  generate_default_data: True
+
+
+print_config: True

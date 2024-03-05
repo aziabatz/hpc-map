@@ -1,0 +1,4 @@
+
+model_summary:
+    target_: lightning.pytorch.callbacks.RichModelSummary
+    max_depth: 5 # the maximum depth of layer nesting that the summary will include

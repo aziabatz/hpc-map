@@ -1,0 +1,36 @@
+# @package _global_
+
+defaults:
+  - override /model: am.yaml
+  - override /env: mpimap.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: default.yaml
+  - override /logger: wandb.yaml
+
+env:
+  num_procs: 32
+  num_machines: 4
+  max_machine_capacity: 8
+
+logger:
+  wandb:
+    project: "mpi_mapping"
+    tags: ["am", "${env.name}"]
+    group: ${env.name}_procs_${env.num_procs}
+    name: am-${env.name}-${env.num_procs}_${env.num_machines}
+
+
+model:
+  batch_size: 512
+  val_batch_size: 1024
+  test_batch_size: 1024
+  train_data_size: 1_000_000
+  val_data_size: 10_000
+  test_data_size: 10_000
+  optimizer_kwargs:
+    lr: 1e-4
+
+trainer:
+  max_epochs: 10
+
+#seed: 1234
