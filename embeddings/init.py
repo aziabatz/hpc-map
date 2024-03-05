@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 from torch import Tensor
 import torch.nn as nn
+import torch
 
 from node2vec.node2vec import Node2Vec
 
@@ -32,6 +33,7 @@ class MappingInitEmbedding(nn.Module):
         normalize=True,
         n2v_kwargs=None,
         w2v_kwargs=None,
+        device="cpu",
     ):
         """
         Initializes the class with the given configuration.
@@ -46,7 +48,7 @@ class MappingInitEmbedding(nn.Module):
         super(MappingInitEmbedding, self).__init__()
 
         if n2v_kwargs is None:
-            n2v_kwargs = dict(dimensions=embedding_dim, num_walks=10, workers=4)
+            n2v_kwargs = dict(dimensions=embedding_dim, num_walks=10, workers=16)
 
         if w2v_kwargs is None:
             w2v_kwargs = dict(window=64, min_count=5, batch_words=4)
@@ -59,6 +61,8 @@ class MappingInitEmbedding(nn.Module):
         self.n2v = None
 
         self.normalize = normalize
+
+        self.device = device
 
     def embedded(self, matrix):
         """
@@ -144,11 +148,13 @@ class MappingInitEmbedding(nn.Module):
             np.ndarray: The embeddings for the given cost matrix.
         """
         recompute = False  # td["recompute"]
-        matrix = td["cost_matrix"]
+        matrix: torch.Tensor = td["cost_matrix"]
+
+        matrix_cpu = matrix.cpu()
 
         if recompute is True:
             self.n2v = None
             self.n2v_model = (None,)
             self.embedded_matrix = None
 
-        return Tensor(self.embedded(matrix))
+        return Tensor(self.embedded(matrix_cpu)).to(self.device)
