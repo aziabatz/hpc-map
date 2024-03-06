@@ -32,7 +32,7 @@ from utils.logger import get_pylogger
 
 MAX_PROCESS = 8
 MAX_NODES = 4
-EMBEDDING_SIZE = 128
+EMBEDDING_SIZE = 8
 BATCH_SIZE = 4
 
 
@@ -47,16 +47,14 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
 
-    log.info(f"Init env:  <{cfg.env._target_}>")
-
-    env = hydra.utils.instantiate(cfg.env)
+    env: MappingEnv = hydra.utils.instantiate(cfg.env)
 
     n2v_init = MappingInitEmbedding(
         embedding_dim=EMBEDDING_SIZE, linear_bias=True, device=device
     )
 
     context = MappingContextEmbedding(
-        step_context_dim=(MAX_PROCESS + MAX_NODES + EMBEDDING_SIZE),
+        step_context_dim=env.num_procs + env.num_machines + EMBEDDING_SIZE,
         embedding_dim=EMBEDDING_SIZE,
     )
 
@@ -67,6 +65,8 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
         init_embedding=n2v_init,
         context_embedding=context,
         dynamic_embedding=StaticEmbedding(),
+        embedding_dim=EMBEDDING_SIZE,
+        num_heads=1,
     )
 
     log.info(f"Init model <{cfg.model._target_}>")

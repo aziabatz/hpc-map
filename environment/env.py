@@ -235,25 +235,15 @@ class MappingEnv(RL4COEnvBase):
 
     def get_reward(self, td, actions) -> TensorDict:
 
-        cost_matrix = td["cost_matrix"]
-        current_placement = td["current_placement"]
+        cost_matrix = td["cost_matrix"].clone()
+        current_placement = td["current_placement"].clone()
 
-        # Mask for processes in different nodes only
-        node_diff_mask = current_placement.unsqueeze(-1) != current_placement.unsqueeze(
-            -2
+        node_diff_mask = current_placement.unsqueeze(2) != current_placement.unsqueeze(
+            1
         )
+        cost_matrix[node_diff_mask] = 0
 
-        # Concat cost matrix with current placement
-        expanded_cost_matrix = cost_matrix[current_placement, :][
-            :, :, current_placement
-        ]
-
-        # Apply mask to cost for messages through different nodes
-        communication_costs = expanded_cost_matrix * node_diff_mask
-
-        # Total sum of all cost (for each batch)
-        total_communication_cost = communication_costs.sum(dim=(-2, -1))
-        reward = -total_communication_cost
+        reward = -cost_matrix  # -total_communication_cost
 
         return reward.float()
 
