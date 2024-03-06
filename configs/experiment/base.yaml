@@ -21,16 +21,21 @@ logger:
 
 
 model:
-  batch_size: 512
-  val_batch_size: 1024
-  test_batch_size: 1024
-  train_data_size: 1_000_000
-  val_data_size: 10_000
-  test_data_size: 10_000
+  batch_size: 3
+  # val_batch_size: 3
+  # test_batch_size: 3
+  train_data_size: 24
+  val_data_size: 12
+  test_data_size: 12
   optimizer_kwargs:
     lr: 1e-4
 
+policy:
+  dims: 10
+
+
+
 trainer:
-  max_epochs: 10
+  max_epochs: 1000
 
 #seed: 1234
