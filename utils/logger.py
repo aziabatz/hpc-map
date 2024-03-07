@@ -8,8 +8,6 @@ def get_pylogger(name=__name__) -> logging.Logger:
     logger = logging.getLogger(name)
 
     logging_levels = [
-        "debug",
-        "info",
         "warning",
         "error",
         "exception",

@@ -263,7 +263,7 @@ class MappingEnv(RL4COEnvBase):
         )
         # TODO Add a new parameter sparsity?
         dms[..., torch.arange(self.num_procs), torch.arange(self.num_procs)] = 0
-        log.info("Using TMAT class (triangle inequality): {}".format(self.tmat_class))
+        log.debug("Using TMAT class (triangle inequality): {}".format(self.tmat_class))
         if self.tmat_class:
             while True:
                 old_dms = dms.clone()
