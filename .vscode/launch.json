@@ -10,8 +10,20 @@
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
-           /*  "args": "${command:pickArgs}" */
-           "justMyCode": false
+            /*  "args": "${command:pickArgs}" */
+            "justMyCode": false
+        },
+        {
+            "name": "AM experiment",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "experiment=am",
+                "logger=none"
+            ],
+            "justMyCode": false
         }
     ]
 }
