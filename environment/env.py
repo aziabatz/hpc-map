@@ -238,8 +238,9 @@ class MappingEnv(RL4COEnvBase):
         )
         cost_matrix[node_diff_mask] = 0
 
-        reward = -cost_matrix  # -total_communication_cost
-
+        reward = -cost_matrix # -total_communication_cost
+        reward = torch.sum(reward, dim=(1,2))
+        
         return reward.float()
 
     def generate_data(self, batch_size) -> TensorDict:

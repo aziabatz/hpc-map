@@ -20,12 +20,12 @@ logger:
     name: am-${env.name}-${env.num_procs}_${env.num_machines}
 
 model:
-  batch_size: 5
-  val_batch_size: 5
-  test_batch_size: 5
-  train_data_size: 20
-  val_data_size: 20
-  test_data_size: 20
+  batch_size: 10
+  val_batch_size: 10
+  test_batch_size: 10
+  train_data_size: 100
+  val_data_size: 100
+  test_data_size: 100
   optimizer_kwargs:
     lr: 1e-4
     weight_decay: 0
