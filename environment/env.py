@@ -137,11 +137,6 @@ class MappingEnv(RL4COEnvBase):
             },
         )
 
-        # print("::::::::::::::::::::::::")
-        # for key, value in td.items():
-        #     print(f"{key}:: {value}")
-        # print("::::::::::::::::::::::::")
-
         return td
 
     def get_action_mask(self, td: TensorDict) -> torch.Tensor:
