@@ -72,19 +72,6 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Init model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model, env, policy=policy)
 
-    # model = AttentionModel(
-    #     env,
-    #     baseline="rollout",
-    #     policy=policy,
-    #     batch_size=BATCH_SIZE,
-    #     val_batch_size=BATCH_SIZE,
-    #     test_batch_size=BATCH_SIZE,
-    #     train_data_size=10_000,
-    #     val_data_size=1000,
-    #     test_data_size=100,
-    #     optimizer_kwargs={"lr": 1e-4},
-    # )
-
     log.info("Init callbacks...")
     callbacks: List[Callback] = instantiate_callbacks(cfg.get("callbacks"))
 
