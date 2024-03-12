@@ -49,6 +49,10 @@ class MappingEnv(RL4COEnvBase):
 
         self._make_spec(td_params)
 
+        if self.device != "cuda" or self.device !="mps":
+            log.warn(f"Not using GPU for environment. Using {self.device} instead")
+        
+
     def _reset(self, td: Optional[TensorDict] = None, batch_size=None) -> TensorDict:
         # Initialize distance matrix
         cost_matrix = td["cost_matrix"] if td is not None else None
@@ -68,23 +72,25 @@ class MappingEnv(RL4COEnvBase):
         if cost_matrix is None:
             cost_matrix = generated_data["cost_matrix"]
 
+
+        cost_matrix.to(self.device)
         # Other variables
-        current_node = torch.zeros(*batch_size, dtype=torch.int64, device=device)
-        available = torch.ones(size=(*batch_size, self.num_procs), dtype=torch.bool)
-        current_machine = torch.zeros(*batch_size, dtype=torch.int32, device=device)
+        current_node = torch.zeros(*batch_size, dtype=torch.int64, device=device).to(self.device)
+        available = torch.ones(size=(*batch_size, self.num_procs), dtype=torch.bool).to(self.device)
+        current_machine = torch.zeros(*batch_size, dtype=torch.int32, device=device).to(self.device)
 
         # The timestep
-        i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
+        i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device).to(self.device)
 
         # Generate node capacities tensor
         self.node_capacities = node_capacities = torch.randint(
             low=0, high=self.max_machine_capacity, size=(*batch_size, self.num_machines)
-        )
+        ).to(self.device)
 
         # Generate current placement tensor
         self.current_placement = current_placement = torch.full(
             size=(*batch_size, self.num_procs), fill_value=-1
-        )
+        ).to(self.device)
 
         return TensorDict(
             {
@@ -105,8 +111,8 @@ class MappingEnv(RL4COEnvBase):
         first_node = current_node if batch_to_scalar(td["i"]) == 0 else td["first_node"]
 
         # Obtain where can we place this process
-        machine_index = self.proc_to_machine(td).long()
-        batch_index = torch.arange(machine_index.size(0)).long()
+        machine_index = self.proc_to_machine(td).long().to(self.device)
+        batch_index = torch.arange(machine_index.size(0)).long().to(self.device)
         # print(
         #     batch_index.shape,
         #     action.shape,
@@ -118,11 +124,11 @@ class MappingEnv(RL4COEnvBase):
         # Assign process to machine
         self.current_placement[batch_index, action] = machine_index
 
-        available = self.get_action_mask(td)
-        done = self.get_done_state(self.node_capacities, self.current_placement)
+        available = self.get_action_mask(td).to(self.device)
+        done = self.get_done_state(self.node_capacities, self.current_placement).to(self.device)
 
         # The reward is calculated outside via get_reward for efficiency, so we set it to 0 here
-        reward = torch.zeros_like(done)
+        reward = torch.zeros_like(done).to(self.device)
 
         td.update(
             {
@@ -260,6 +266,7 @@ class MappingEnv(RL4COEnvBase):
         # TODO Add a new parameter sparsity?
         dms[..., torch.arange(self.num_procs), torch.arange(self.num_procs)] = 0
         log.debug("Using TMAT class (triangle inequality): {}".format(self.tmat_class))
+        
         if self.tmat_class:
             while True:
                 old_dms = dms.clone()

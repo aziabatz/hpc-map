@@ -41,13 +41,13 @@ log = get_pylogger(__name__)
 
 def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
-    device = "cpu"  # get_device()
-    accelerator = "cpu"  # get_accelerator(device)
+    device = get_device()
+    accelerator = get_accelerator(device)
     print(f"Using platform {device} with accelerator {accelerator}")
 
     wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
 
-    env: MappingEnv = hydra.utils.instantiate(cfg.env)
+    env: MappingEnv = hydra.utils.instantiate(cfg.env, device=device)
 
     n2v_init = MappingInitEmbedding(
         embedding_dim=EMBEDDING_SIZE, linear_bias=True, device=device
