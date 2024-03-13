@@ -80,7 +80,7 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Init trainer...")
     trainer: RL4COTrainer = hydra.utils.instantiate(
-        cfg.trainer, callbacks=callbacks, logger=logger
+        cfg.trainer, callbacks=callbacks, logger=logger, devices=1, accelerator=accelerator,
     )
 
     object_dict = {
