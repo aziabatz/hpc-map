@@ -50,9 +50,8 @@ class MappingEnv(RL4COEnvBase):
 
         self._make_spec(td_params)
 
-        if self.device != "cuda" or self.device !="mps":
+        if self.device != "cuda" or self.device != "mps":
             log.warn(f"Not using GPU for environment. Using {self.device} instead")
-        
 
     def _reset(self, td: Optional[TensorDict] = None, batch_size=None) -> TensorDict:
         # Initialize distance matrix
@@ -73,19 +72,26 @@ class MappingEnv(RL4COEnvBase):
         if cost_matrix is None:
             cost_matrix = generated_data["cost_matrix"]
 
-
         cost_matrix.to(self.device)
         # Other variables
-        current_node = torch.zeros(*batch_size, dtype=torch.int64, device=device).to(self.device)
-        available = torch.ones(size=(*batch_size, self.num_procs), dtype=torch.bool).to(self.device)
-        current_machine = torch.zeros(*batch_size, dtype=torch.int32, device=device).to(self.device)
+        current_node = torch.zeros(*batch_size, dtype=torch.int64, device=device).to(
+            self.device
+        )
+        available = torch.ones(size=(*batch_size, self.num_procs), dtype=torch.bool).to(
+            self.device
+        )
+        current_machine = torch.zeros(*batch_size, dtype=torch.int32, device=device).to(
+            self.device
+        )
 
         # The timestep
-        i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device).to(self.device)
+        i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device).to(
+            self.device
+        )
 
         # Generate node capacities tensor
-        self.node_capacities = node_capacities = torch.randint(
-            low=0, high=self.max_machine_capacity, size=(*batch_size, self.num_machines)
+        self.node_capacities = node_capacities = torch.full(
+            size=(*batch_size, self.num_machines), fill_value=self.max_machine_capacity
         ).to(self.device)
 
         # Generate current placement tensor
@@ -126,7 +132,9 @@ class MappingEnv(RL4COEnvBase):
         self.current_placement[batch_index, action] = machine_index
 
         available = self.get_action_mask(td).to(self.device)
-        done = self.get_done_state(self.node_capacities, self.current_placement).to(self.device)
+        done = self.get_done_state(self.node_capacities, self.current_placement).to(
+            self.device
+        )
 
         # The reward is calculated outside via get_reward for efficiency, so we set it to 0 here
         reward = torch.zeros_like(done).to(self.device)
@@ -245,32 +253,33 @@ class MappingEnv(RL4COEnvBase):
         )
         cost_matrix[node_diff_mask] = 0
 
-        reward = -cost_matrix # -total_communication_cost
-        reward = torch.sum(reward, dim=(1,2))
-        
+        reward = -cost_matrix  # -total_communication_cost
+        reward = torch.sum(reward, dim=(1, 2))
+
         return reward.float()
 
     def generate_data(self, batch_size, sparsity: float = 0.5) -> TensorDict:
         # Generate distance matrices inspired by the reference MatNet (Kwon et al., 2021)
         # We satifsy the triangle inequality (TMAT class) in a batch
         batch_size = [batch_size] if isinstance(batch_size, int) else batch_size
-        dms = (
-            torch.randint(
-                low=0,
-                high=self.max_cost,
-                size=(*batch_size, self.num_procs, self.num_procs),
-                generator=self.rng,
-            )
+        dms = torch.randint(
+            low=0,
+            high=self.max_cost,
+            size=(*batch_size, self.num_procs, self.num_procs),
+            generator=self.rng,
         )
 
         # Processes do not communicate with themselves
         dms[..., torch.arange(self.num_procs), torch.arange(self.num_procs)] = 0
         # We create a mask to apply the sparsity factor (we will have sparsity% zeroed items)
-        mask = torch.rand((*batch_size, self.num_procs, self.num_procs), generator=self.rng) < sparsity
-        #apply sparsity mask
+        mask = (
+            torch.rand(
+                (*batch_size, self.num_procs, self.num_procs), generator=self.rng
+            )
+            < sparsity
+        )
+        # apply sparsity mask
         dms.masked_fill(mask, 0)
-        
-        
 
         return TensorDict(
             {
