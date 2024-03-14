@@ -3,6 +3,7 @@ from lightning import Callback, LightningModule
 from omegaconf import DictConfig
 import torch
 from rl4co.models import AttentionModelPolicy, AutoregressivePolicy
+from rl4co.models import MDAMPolicy
 
 import wandb
 import hydra
@@ -49,22 +50,38 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     env: MappingEnv = hydra.utils.instantiate(cfg.env, device=device)
 
+    #EMBEDDING_SIZE = env.num_machines
+
     n2v_init = MappingInitEmbedding(
-        embedding_dim=EMBEDDING_SIZE, linear_bias=True, device=device
+        embedding_dim=EMBEDDING_SIZE,
+        linear_bias=True, 
+        device=device
     )
 
     context = MappingContextEmbedding(
-        step_context_dim=env.num_procs + env.num_machines + EMBEDDING_SIZE,
+        step_context_dim=EMBEDDING_SIZE*2,
         embedding_dim=EMBEDDING_SIZE,
+        num_procs=env.num_procs
+    )
+
+    dynamic = MappingDynamicEmbedding(
+        num_nodes=env.num_machines,
+        num_procs=env.num_procs,
+        embedding_dim=EMBEDDING_SIZE
     )
 
     # TODO Get policy from hydra
+
+    # policy = MDAMPolicy(
+    #     env_name=env.name,
+    #     embedding_dim=EMBEDDING_SIZE
+    # )
 
     policy = AutoregressivePolicy(
         env.name,
         init_embedding=n2v_init,
         context_embedding=context,
-        dynamic_embedding=StaticEmbedding(),
+        dynamic_embedding=dynamic, #StaticEmbedding(),
         embedding_dim=EMBEDDING_SIZE,
         num_heads=1,
     )

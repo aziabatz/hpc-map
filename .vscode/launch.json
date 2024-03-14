@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python Debugger: Current File with Arguments",
             "type": "debugpy",
@@ -22,6 +23,17 @@
             "args": [
                 "experiment=am",
                 "logger=none"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "MDAM experiment",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "experiment=mdam"
             ],
             "justMyCode": false
         }
