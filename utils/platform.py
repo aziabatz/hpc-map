@@ -8,7 +8,7 @@ def get_device():
             device = "cuda"
     elif torch.backends.mps.is_available():
         if torch.backends.mps.is_built():
-            device = "mps"
+            device = "cpu"  #"mps"
 
     return device
 
@@ -20,7 +20,7 @@ def get_accelerator(device):
     if device == "cuda":
         accelerator = "gpu"
     elif device == "mps":
-        accelerator = device
+        accelerator = "cpu" # "mps"
     else:
         accelerator = "auto"
 

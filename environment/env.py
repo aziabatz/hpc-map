@@ -49,6 +49,10 @@ class MappingEnv(RL4COEnvBase):
 
         self._make_spec(td_params)
 
+        if self.device != "cuda" or self.device !="mps":
+            log.warn(f"Not using GPU for environment. Using {self.device} instead")
+        
+
     def _reset(self, td: Optional[TensorDict] = None, batch_size=None) -> TensorDict:
         # Initialize distance matrix
         cost_matrix = td["cost_matrix"] if td is not None else None
@@ -68,23 +72,25 @@ class MappingEnv(RL4COEnvBase):
         if cost_matrix is None:
             cost_matrix = generated_data["cost_matrix"]
 
+
+        cost_matrix.to(self.device)
         # Other variables
-        current_node = torch.zeros(*batch_size, dtype=torch.int64, device=device)
-        available = torch.ones(size=(*batch_size, self.num_procs), dtype=torch.bool)
-        current_machine = torch.zeros(*batch_size, dtype=torch.int32, device=device)
+        current_node = torch.zeros(*batch_size, dtype=torch.int64, device=device).to(self.device)
+        available = torch.ones(size=(*batch_size, self.num_procs), dtype=torch.bool).to(self.device)
+        current_machine = torch.zeros(*batch_size, dtype=torch.int32, device=device).to(self.device)
 
         # The timestep
-        i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device)
+        i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device).to(self.device)
 
         # Generate node capacities tensor
         self.node_capacities = node_capacities = torch.randint(
             low=0, high=self.max_machine_capacity, size=(*batch_size, self.num_machines)
-        )
+        ).to(self.device)
 
         # Generate current placement tensor
         self.current_placement = current_placement = torch.full(
             size=(*batch_size, self.num_procs), fill_value=-1
-        )
+        ).to(self.device)
 
         return TensorDict(
             {
@@ -105,8 +111,8 @@ class MappingEnv(RL4COEnvBase):
         first_node = current_node if batch_to_scalar(td["i"]) == 0 else td["first_node"]
 
         # Obtain where can we place this process
-        machine_index = self.proc_to_machine(td).long()
-        batch_index = torch.arange(machine_index.size(0)).long()
+        machine_index = self.proc_to_machine(td).long().to(self.device)
+        batch_index = torch.arange(machine_index.size(0)).long().to(self.device)
         # print(
         #     batch_index.shape,
         #     action.shape,
@@ -118,11 +124,11 @@ class MappingEnv(RL4COEnvBase):
         # Assign process to machine
         self.current_placement[batch_index, action] = machine_index
 
-        available = self.get_action_mask(td)
-        done = self.get_done_state(self.node_capacities, self.current_placement)
+        available = self.get_action_mask(td).to(self.device)
+        done = self.get_done_state(self.node_capacities, self.current_placement).to(self.device)
 
         # The reward is calculated outside via get_reward for efficiency, so we set it to 0 here
-        reward = torch.zeros_like(done)
+        reward = torch.zeros_like(done).to(self.device)
 
         td.update(
             {
@@ -136,11 +142,6 @@ class MappingEnv(RL4COEnvBase):
                 "current_placement": self.current_placement,
             },
         )
-
-        # print("::::::::::::::::::::::::")
-        # for key, value in td.items():
-        #     print(f"{key}:: {value}")
-        # print("::::::::::::::::::::::::")
 
         return td
 
@@ -235,26 +236,17 @@ class MappingEnv(RL4COEnvBase):
 
     def get_reward(self, td, actions) -> TensorDict:
 
-        cost_matrix = td["cost_matrix"]
-        current_placement = td["current_placement"]
+        cost_matrix = td["cost_matrix"].clone()
+        current_placement = td["current_placement"].clone()
 
-        # Mask for processes in different nodes only
-        node_diff_mask = current_placement.unsqueeze(-1) != current_placement.unsqueeze(
-            -2
+        node_diff_mask = current_placement.unsqueeze(2) != current_placement.unsqueeze(
+            1
         )
+        cost_matrix[node_diff_mask] = 0
 
-        # Concat cost matrix with current placement
-        expanded_cost_matrix = cost_matrix[current_placement, :][
-            :, :, current_placement
-        ]
-
-        # Apply mask to cost for messages through different nodes
-        communication_costs = expanded_cost_matrix * node_diff_mask
-
-        # Total sum of all cost (for each batch)
-        total_communication_cost = communication_costs.sum(dim=(-2, -1))
-        reward = -total_communication_cost
-
+        reward = -cost_matrix # -total_communication_cost
+        reward = torch.sum(reward, dim=(1,2))
+        
         return reward.float()
 
     def generate_data(self, batch_size) -> TensorDict:
@@ -273,7 +265,8 @@ class MappingEnv(RL4COEnvBase):
         )
         # TODO Add a new parameter sparsity?
         dms[..., torch.arange(self.num_procs), torch.arange(self.num_procs)] = 0
-        log.info("Using TMAT class (triangle inequality): {}".format(self.tmat_class))
+        log.debug("Using TMAT class (triangle inequality): {}".format(self.tmat_class))
+        
         if self.tmat_class:
             while True:
                 old_dms = dms.clone()

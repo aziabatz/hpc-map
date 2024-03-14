@@ -32,7 +32,7 @@ from utils.logger import get_pylogger
 
 MAX_PROCESS = 8
 MAX_NODES = 4
-EMBEDDING_SIZE = 128
+EMBEDDING_SIZE = 8
 BATCH_SIZE = 4
 
 
@@ -41,22 +41,20 @@ log = get_pylogger(__name__)
 
 def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
-    device = "cpu"  # get_device()
-    accelerator = "cpu"  # get_accelerator(device)
+    device = get_device()
+    accelerator = get_accelerator(device)
     print(f"Using platform {device} with accelerator {accelerator}")
 
     wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
 
-    log.info(f"Init env:  <{cfg.env._target_}>")
-
-    env = hydra.utils.instantiate(cfg.env)
+    env: MappingEnv = hydra.utils.instantiate(cfg.env, device=device)
 
     n2v_init = MappingInitEmbedding(
         embedding_dim=EMBEDDING_SIZE, linear_bias=True, device=device
     )
 
     context = MappingContextEmbedding(
-        step_context_dim=(MAX_PROCESS + MAX_NODES + EMBEDDING_SIZE),
+        step_context_dim=env.num_procs + env.num_machines + EMBEDDING_SIZE,
         embedding_dim=EMBEDDING_SIZE,
     )
 
@@ -67,23 +65,12 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
         init_embedding=n2v_init,
         context_embedding=context,
         dynamic_embedding=StaticEmbedding(),
+        embedding_dim=EMBEDDING_SIZE,
+        num_heads=1,
     )
 
     log.info(f"Init model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model, env, policy=policy)
-
-    # model = AttentionModel(
-    #     env,
-    #     baseline="rollout",
-    #     policy=policy,
-    #     batch_size=BATCH_SIZE,
-    #     val_batch_size=BATCH_SIZE,
-    #     test_batch_size=BATCH_SIZE,
-    #     train_data_size=10_000,
-    #     val_data_size=1000,
-    #     test_data_size=100,
-    #     optimizer_kwargs={"lr": 1e-4},
-    # )
 
     log.info("Init callbacks...")
     callbacks: List[Callback] = instantiate_callbacks(cfg.get("callbacks"))
@@ -93,7 +80,7 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Init trainer...")
     trainer: RL4COTrainer = hydra.utils.instantiate(
-        cfg.trainer, callbacks=callbacks, logger=logger
+        cfg.trainer, callbacks=callbacks, logger=logger, devices=1, accelerator=accelerator,
     )
 
     object_dict = {

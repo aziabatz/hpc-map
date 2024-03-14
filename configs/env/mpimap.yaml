@@ -1,0 +1,13 @@
+
+_target_: environment.env.MappingEnv
+
+name: mpimap
+num_procs: 32
+num_machines: 8
+min_cost: 20
+max_cost: 1000
+max_machine_capacity: 6
+
+#data_dir: dataset directory (npz files)
+# val_file: ....
+# test_file: ....

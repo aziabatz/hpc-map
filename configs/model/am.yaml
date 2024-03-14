@@ -1,3 +1,4 @@
 _target_: rl4co.models.AttentionModel
 
 baseline: "rollout"
+dataloader_num_workers: 8
