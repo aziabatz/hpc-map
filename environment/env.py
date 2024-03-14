@@ -44,6 +44,7 @@ class MappingEnv(RL4COEnvBase):
 
         self.node_capacities = None
         self.current_placement = None
+        self.sparsity = 0.5
 
         self.current_machine = None
 
@@ -249,7 +250,7 @@ class MappingEnv(RL4COEnvBase):
         
         return reward.float()
 
-    def generate_data(self, batch_size) -> TensorDict:
+    def generate_data(self, batch_size, sparsity: float = 0.5) -> TensorDict:
         # Generate distance matrices inspired by the reference MatNet (Kwon et al., 2021)
         # We satifsy the triangle inequality (TMAT class) in a batch
         batch_size = [batch_size] if isinstance(batch_size, int) else batch_size
@@ -260,21 +261,16 @@ class MappingEnv(RL4COEnvBase):
                 size=(*batch_size, self.num_procs, self.num_procs),
                 generator=self.rng,
             )
-            # * (self.max_cost - self.min_cost)
-            # + self.min_cost
         )
-        # TODO Add a new parameter sparsity?
+
+        # Processes do not communicate with themselves
         dms[..., torch.arange(self.num_procs), torch.arange(self.num_procs)] = 0
-        log.debug("Using TMAT class (triangle inequality): {}".format(self.tmat_class))
+        # We create a mask to apply the sparsity factor (we will have sparsity% zeroed items)
+        mask = torch.rand((*batch_size, self.num_procs, self.num_procs), generator=self.rng) < sparsity
+        #apply sparsity mask
+        dms.masked_fill(mask, 0)
         
-        if self.tmat_class:
-            while True:
-                old_dms = dms.clone()
-                dms, _ = (
-                    dms[..., :, None, :] + dms[..., None, :, :].transpose(-2, -1)
-                ).min(dim=-1)
-                if (dms == old_dms).all():
-                    break
+        
 
         return TensorDict(
             {
