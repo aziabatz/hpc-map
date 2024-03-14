@@ -20,12 +20,12 @@ logger:
     name: am-${env.name}-${env.num_procs}_${env.num_machines}
 
 model:
-  batch_size: 512
-  val_batch_size: 512
-  test_batch_size: 512
-  train_data_size: 51200
-  val_data_size: 51200
-  test_data_size: 51200
+  batch_size: 3
+  val_batch_size: 3
+  test_batch_size: 3
+  train_data_size: 99
+  val_data_size: 99
+  test_data_size: 99
   optimizer_kwargs:
     lr: 1e-4
     weight_decay: 0
@@ -36,6 +36,6 @@ model:
     gamma: 0.1
 
 trainer:
-  max_epochs: 10000
+  max_epochs: 1000
 
 seed: 1234
