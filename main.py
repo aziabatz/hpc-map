@@ -50,24 +50,22 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     env: MappingEnv = hydra.utils.instantiate(cfg.env, device=device)
 
-    #EMBEDDING_SIZE = env.num_machines
+    # EMBEDDING_SIZE = env.num_machines
 
     n2v_init = MappingInitEmbedding(
-        embedding_dim=EMBEDDING_SIZE,
-        linear_bias=True, 
-        device=device
+        embedding_dim=EMBEDDING_SIZE, linear_bias=True, device=device
     )
 
     context = MappingContextEmbedding(
-        step_context_dim=EMBEDDING_SIZE*2,
+        step_context_dim=EMBEDDING_SIZE * 2,
         embedding_dim=EMBEDDING_SIZE,
-        num_procs=env.num_procs
+        num_procs=env.num_procs,
     )
 
     dynamic = MappingDynamicEmbedding(
         num_nodes=env.num_machines,
         num_procs=env.num_procs,
-        embedding_dim=EMBEDDING_SIZE
+        embedding_dim=EMBEDDING_SIZE,
     )
 
     # TODO Get policy from hydra
@@ -81,7 +79,7 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
         env.name,
         init_embedding=n2v_init,
         context_embedding=context,
-        dynamic_embedding=dynamic, #StaticEmbedding(),
+        dynamic_embedding=dynamic,  # StaticEmbedding(),
         embedding_dim=EMBEDDING_SIZE,
         num_heads=1,
     )
@@ -97,7 +95,11 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Init trainer...")
     trainer: RL4COTrainer = hydra.utils.instantiate(
-        cfg.trainer, callbacks=callbacks, logger=logger, devices=1, accelerator=accelerator,
+        cfg.trainer,
+        callbacks=callbacks,
+        logger=logger,
+        devices=1,
+        accelerator=accelerator,
     )
 
     object_dict = {

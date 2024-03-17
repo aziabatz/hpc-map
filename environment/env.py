@@ -262,7 +262,7 @@ class MappingEnv(RL4COEnvBase):
         # Generate distance matrices inspired by the reference MatNet (Kwon et al., 2021)
         # We satifsy the triangle inequality (TMAT class) in a batch
         batch_size = [batch_size] if isinstance(batch_size, int) else batch_size
-        dms: torch.Tensor= torch.randint(
+        dms: torch.Tensor = torch.randint(
             low=0,
             high=self.max_cost,
             size=(*batch_size, self.num_procs, self.num_procs),
