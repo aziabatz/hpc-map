@@ -48,7 +48,7 @@ class MappingInitEmbedding(nn.Module):
         super(MappingInitEmbedding, self).__init__()
 
         if n2v_kwargs is None:
-            n2v_kwargs = dict(dimensions=embedding_dim, num_walks=10, workers=16)
+            n2v_kwargs = dict(dimensions=embedding_dim, num_walks=8, workers=8)
 
         if w2v_kwargs is None:
             w2v_kwargs = dict(window=64, min_count=5, batch_words=4)

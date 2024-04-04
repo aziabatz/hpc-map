@@ -13,6 +13,7 @@ from torchrl.data import (
 from rl4co.envs.common.base import RL4COEnvBase
 from rl4co.envs.common.utils import batch_to_scalar
 from rl4co.utils.pylogger import get_pylogger
+from rl4co.data.transforms import min_max_normalize
 
 log = get_pylogger(__name__)
 
@@ -32,6 +33,7 @@ class MappingEnv(RL4COEnvBase):
         max_machine_capacity=8,
         tmat_class: bool = True,
         td_params: TensorDict = None,
+        normalize: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -45,6 +47,7 @@ class MappingEnv(RL4COEnvBase):
         self.node_capacities = None
         self.current_placement = None
         self.sparsity = 0.5
+        self.normalize = normalize
 
         self.current_machine = None
 
@@ -248,19 +251,31 @@ class MappingEnv(RL4COEnvBase):
         cost_matrix = td["cost_matrix"].clone()
         current_placement = td["current_placement"].clone()
 
-        node_diff_mask = current_placement.unsqueeze(2) != current_placement.unsqueeze(
-            1
-        )
-        cost_matrix[node_diff_mask] = 0
+        same_machine_mask = current_placement.unsqueeze(2) == current_placement.unsqueeze(1)
+        #cost_matrix[same_machine_mask] = 0
+        masked_costs = torch.where(same_machine_mask,
+            torch.zeros_like(cost_matrix),
+            cost_matrix)
 
-        reward = -cost_matrix  # -total_communication_cost
-        reward = torch.sum(reward, dim=(1, 2))
+        #reward = -cost_matrix  # -total_communication_cost
+        #reward = torch.sum(reward, dim=(1, 2))
+        batch_size = cost_matrix.size(0)
 
-        return reward.float()
+        worst = torch.sum(cost_matrix, dim=(1,2)).view(batch_size)
+        # print(worst)
+        # print(cost_matrix[0])
+        
+        #prevent inf's
+        epsilon = 1e-8
+        masked_costs_sum = torch.sum(masked_costs, dim=(1,2))
+        reward = worst/(masked_costs_sum+epsilon)
+        # print(reward[0])
+        #reward = torch.sum(reward, dim=(1,2))
+
+        return reward
 
     def generate_data(self, batch_size, sparsity: float = 0.5) -> TensorDict:
-        # Generate distance matrices inspired by the reference MatNet (Kwon et al., 2021)
-        # We satifsy the triangle inequality (TMAT class) in a batch
+        
         batch_size = [batch_size] if isinstance(batch_size, int) else batch_size
         dms: torch.Tensor= torch.randint(
             low=0,
@@ -280,6 +295,9 @@ class MappingEnv(RL4COEnvBase):
         )
         # apply sparsity mask
         dms.masked_fill_(mask, 0)
+
+        if self.normalize:
+            dms = min_max_normalize(dms)
 
         return TensorDict(
             {
