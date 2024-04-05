@@ -33,7 +33,7 @@ from utils.logger import get_pylogger
 
 MAX_PROCESS = 8
 MAX_NODES = 4
-EMBEDDING_SIZE = 8
+EMBEDDING_SIZE = 128
 BATCH_SIZE = 4
 
 
@@ -81,9 +81,10 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
         env.name,
         init_embedding=n2v_init,
         context_embedding=context,
-        dynamic_embedding=dynamic, #StaticEmbedding(),
+        dynamic_embedding=StaticEmbedding(),
         embedding_dim=EMBEDDING_SIZE,
-        num_heads=1,
+        num_heads=8,
+        num_encoder_layers=4
     )
 
     log.info(f"Init model <{cfg.model._target_}>")

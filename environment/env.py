@@ -268,13 +268,14 @@ class MappingEnv(RL4COEnvBase):
         #prevent inf's
         epsilon = 1e-8
         masked_costs_sum = torch.sum(masked_costs, dim=(1,2))
-        reward = worst/(masked_costs_sum+epsilon)
+        #reward = worst/(masked_costs_sum+epsilon)
+        reward = -masked_costs_sum
         # print(reward[0])
         #reward = torch.sum(reward, dim=(1,2))
 
         return reward
 
-    def generate_data(self, batch_size, sparsity: float = 0.5) -> TensorDict:
+    def generate_data(self, batch_size, sparsity: float = None) -> TensorDict:
         
         batch_size = [batch_size] if isinstance(batch_size, int) else batch_size
         dms: torch.Tensor= torch.randint(
@@ -283,6 +284,9 @@ class MappingEnv(RL4COEnvBase):
             size=(*batch_size, self.num_procs, self.num_procs),
             generator=self.rng,
         )
+
+        if sparsity is None:
+            sparsity = torch.rand(batch_size[0], 1 ,1)
 
         # Processes do not communicate with themselves
         dms[..., torch.arange(self.num_procs), torch.arange(self.num_procs)] = 0
