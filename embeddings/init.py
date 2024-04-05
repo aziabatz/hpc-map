@@ -63,6 +63,8 @@ class MappingInitEmbedding(nn.Module):
         self.normalize = normalize
 
         self.device = device
+        self.proj = None
+        self.embedding_dim = embedding_dim
 
     def embedded(self, matrix):
         """
@@ -150,11 +152,18 @@ class MappingInitEmbedding(nn.Module):
         recompute = False  # td["recompute"]
         matrix: torch.Tensor = td["cost_matrix"]
 
-        matrix_cpu = matrix.cpu()
+        if self.normalize:
+            mat_min = matrix.min()
+            mat_max = matrix.max()
+            matrix = (matrix - mat_min) / (mat_max - mat_min)
 
         if recompute is True:
             self.n2v = None
             self.n2v_model = (None,)
             self.embedded_matrix = None
 
-        return Tensor(self.embedded(matrix_cpu)).to(self.device)
+        #return Tensor(self.embedded(matrix_cpu)).to(self.device)
+        
+        if self.proj is None:
+            self.proj = nn.Linear(matrix.size(-1), self.embedding_dim)
+        return self.proj(matrix)
