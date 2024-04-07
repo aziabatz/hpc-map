@@ -84,7 +84,13 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
         dynamic_embedding=StaticEmbedding(),
         embedding_dim=EMBEDDING_SIZE,
         num_heads=8,
-        num_encoder_layers=4
+        num_encoder_layers=4,
+        mask_inner=False,
+        use_graph_context=True,
+        # train_decode_type="multistart_sampling",
+        # val_decode_type="multistart_greedy",
+        # test_decode_type="multistart_greedy",
+
     )
 
     log.info(f"Init model <{cfg.model._target_}>")
