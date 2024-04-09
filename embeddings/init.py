@@ -165,5 +165,5 @@ class MappingInitEmbedding(nn.Module):
         #return Tensor(self.embedded(matrix_cpu)).to(self.device)
         
         if self.proj is None:
-            self.proj = nn.Linear(matrix.size(-1), self.embedding_dim)
+            self.proj = nn.Linear(matrix.size(-1), self.embedding_dim, device=self.device)
         return self.proj(matrix)

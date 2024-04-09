@@ -123,6 +123,10 @@ class MappingEnv(RL4COEnvBase):
         # Obtain where can we place this process
         machine_index = self.proc_to_machine(td).long().to(self.device)
         batch_index = torch.arange(machine_index.size(0)).long().to(self.device)
+
+        self.node_capacities = td["node_capacities"]
+        self.current_placement = td["current_placement"]
+
         # print(
         #     batch_index.shape,
         #     action.shape,
@@ -131,6 +135,7 @@ class MappingEnv(RL4COEnvBase):
         # )
         # Decrement machine capacity
         self.node_capacities[batch_index, machine_index] -= 1
+        
         # Assign process to machine
         self.current_placement[batch_index, action] = machine_index
 
@@ -231,7 +236,7 @@ class MappingEnv(RL4COEnvBase):
         # steps = td["i"]
         # print(steps)
 
-        cumulative_caps = torch.cumsum(capacities, dim=1)
+        #cumulative_caps = torch.cumsum(capacities, dim=1)
 
         # # Check for the first machine that can acommodate a process
         # # cumsum > steps if steps == 0, cumsum >= steps if steps > 0
@@ -309,6 +314,9 @@ class MappingEnv(RL4COEnvBase):
             },
             batch_size=batch_size,
         )
+    
+    def get_num_starts(self, td:TensorDict):
+        return td.batch_size
 
     @staticmethod
     def render(td, actions=None, ax=None):

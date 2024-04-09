@@ -25,6 +25,8 @@ from rl4co.models.zoo import AttentionModel
 from rl4co.utils.trainer import RL4COTrainer
 from rl4co.models.zoo.ppo import PPOPolicy
 from rl4co.models.nn.env_embeddings.dynamic import StaticEmbedding
+from rl4co.models.zoo.deepaco.policy import DeepACOPolicy
+from rl4co.models.nn.env_embeddings.edge import ATSPEdgeEmbedding
 
 from lightning.pytorch.loggers import WandbLogger
 from utils.hydra import instantiate_callbacks, instantiate_loggers
@@ -77,20 +79,29 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     #     embedding_dim=EMBEDDING_SIZE
     # )
 
-    policy = AutoregressivePolicy(
-        env.name,
-        init_embedding=n2v_init,
-        context_embedding=context,
-        dynamic_embedding=StaticEmbedding(),
-        embedding_dim=EMBEDDING_SIZE,
-        num_heads=8,
-        num_encoder_layers=4,
-        mask_inner=False,
-        use_graph_context=True,
-        # train_decode_type="multistart_sampling",
-        # val_decode_type="multistart_greedy",
-        # test_decode_type="multistart_greedy",
 
+    # policy = AutoregressivePolicy(
+    #     env.name,
+    #     init_embedding=n2v_init,
+    #     context_embedding=context,
+    #     dynamic_embedding=StaticEmbedding(),
+    #     embedding_dim=EMBEDDING_SIZE,
+    #     num_heads=8,
+    #     num_encoder_layers=4,
+    #     mask_inner=False,
+    #     use_graph_context=True,
+    #     # train_decode_type="multistart_sampling",
+    #     # val_decode_type="multistart_greedy",
+    #     # test_decode_type="multistart_greedy",
+
+    # )
+
+    policy = DeepACOPolicy(
+        env_name=env.name,
+        init_embedding=n2v_init,
+        edge_embedding=ATSPEdgeEmbedding(EMBEDDING_SIZE),
+        embedding_dim=EMBEDDING_SIZE,
+        
     )
 
     log.info(f"Init model <{cfg.model._target_}>")

@@ -27,13 +27,13 @@
             "justMyCode": false
         },
         {
-            "name": "MDAM experiment",
+            "name": "DeepACO experiment",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "args": [
-                "experiment=mdam"
+                "experiment=deepaco"
             ],
             "justMyCode": false
         }
