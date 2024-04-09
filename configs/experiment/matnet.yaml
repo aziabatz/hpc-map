@@ -8,8 +8,8 @@ defaults:
   - override /logger: wandb.yaml
 
 env:
-  num_procs: 10
-  num_machines: 4
+  num_procs: 32
+  num_machines: 16
   max_machine_capacity: 2
 
 logger:
@@ -21,12 +21,12 @@ logger:
 
 model:
 #  mode: "Random"
-  batch_size: 2
-  val_batch_size: 2
-  test_batch_size: 2
-  train_data_size: 20
+  batch_size: 4
+  val_batch_size: 4
+  test_batch_size: 4
+  train_data_size: 100
   val_data_size: 20
-  test_data_size: 20
+  test_data_size: 50
   optimizer_kwargs:
     lr: 1e-4
     weight_decay: 0
@@ -38,7 +38,7 @@ model:
   feats: "cost_matrix"
 
 trainer:
-  max_epochs: 10
+  max_epochs: 100
   log_every_n_steps: ${model.batch_size}
 
 seed: 1234

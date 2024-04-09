@@ -107,9 +107,10 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     ######################### GREEDY UNTRAINED MODEL ######################
 
-    td_init = env.reset(batch_size=[2]).to(device)
+    td_init0 = env.reset(batch_size=[4]).to(device)
+    td_init = td_init0.clone()
     model = model.to(device)
-    out = model(td_init.clone(), phase="test", decode_type="greedy", return_actions=True)
+    out = model(td_init, phase="test", decode_type="greedy", return_actions=True)
     untrained = out['actions'].cpu().detach()
     rew_untrained = out['reward'].cpu().detach()
 
@@ -163,12 +164,11 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     metric_dict = {**train_metrics, **test_metrics}
 
 
-    td_init = env.reset(batch_size=[2])
-    out = model(td_init.clone(), phase="test", decode_type="greedy", return_actions=True)
+    td_init = td_init0.clone() #env.reset(batch_size=[])
+    out = model(td_init, phase="test", decode_type="greedy", return_actions=True)
     trained = out['actions'].cpu().detach()
     rew_trained = out['reward'].cpu().detach()
     plot(td_init, env, trained, rew_trained, untrained, rew_untrained)
-
 
     return metric_dict, object_dict
 

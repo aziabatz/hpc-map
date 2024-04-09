@@ -13,6 +13,7 @@ def get_pylogger(name=__name__) -> logging.Logger:
         "exception",
         "fatal",
         "critical",
+        "info"
     ]
 
     for level in logging_levels:

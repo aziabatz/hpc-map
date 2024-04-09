@@ -278,7 +278,7 @@ class MappingEnv(RL4COEnvBase):
         # print(reward[0])
         #reward = torch.sum(reward, dim=(1,2))
 
-        return reward
+        return reward.type(torch.float)
 
     def generate_data(self, batch_size, sparsity: float = None) -> TensorDict:
         
@@ -320,19 +320,59 @@ class MappingEnv(RL4COEnvBase):
 
     @staticmethod
     def render(td, actions=None, ax=None):
+        # try:
+        #     import networkx as nx
+        # except ImportError:
+        #     log.warn(
+        #         "Networkx is not installed. Please install it with `pip install networkx`"
+        #     )
+        #     return
+
+        # td = td.detach().cpu()
+        # if actions is None:
+        #     actions = td.get("action", None)
+
+        # # if batch_size greater than 0 , we need to select the first batch element
+        # if td.batch_size != torch.Size([]):
+        #     td = td[0]
+        #     actions = actions[0]
+
+        # src_nodes = actions
+        # tgt_nodes = torch.roll(actions, 1, dims=0)
+
+        # # Plot with networkx
+        # G = nx.DiGraph(td["cost_matrix"].numpy())
+        # pos = nx.spring_layout(G, k=1)
+        # nx.draw(
+        #     G,
+        #     pos,
+        #     ax=ax,
+        #     with_labels=True,
+        #     node_color="skyblue",
+        #     node_size=800,
+        #     edge_color="white",
+        # )
+
+        # # draw edges src_nodes -> tgt_nodes
+        # edgelist = [
+        #     (src_nodes[i].item(), tgt_nodes[i].item()) for i in range(len(src_nodes))
+        # ]
+        # nx.draw_networkx_edges(
+        #     G, pos, ax=ax,edgelist=edgelist, width=2, alpha=1, edge_color="black"
+        # )
+
         try:
             import networkx as nx
+            import numpy as np
+            import matplotlib.pyplot as plt
         except ImportError:
-            log.warn(
-                "Networkx is not installed. Please install it with `pip install networkx`"
-            )
+            log.warn("Networkx is not installed. Please install it with `pip install networkx`")
             return
 
         td = td.detach().cpu()
         if actions is None:
             actions = td.get("action", None)
 
-        # if batch_size greater than 0 , we need to select the first batch element
         if td.batch_size != torch.Size([]):
             td = td[0]
             actions = actions[0]
@@ -340,23 +380,24 @@ class MappingEnv(RL4COEnvBase):
         src_nodes = actions
         tgt_nodes = torch.roll(actions, 1, dims=0)
 
-        # Plot with networkx
         G = nx.DiGraph(td["cost_matrix"].numpy())
         pos = nx.spring_layout(G, k=1)
+
+        num_clusters = len(G.nodes()) // 2
+        colors = plt.cm.tab20(np.linspace(0, 1, num_clusters))
+        node_colors = [colors[i // 2] for i in range(len(G.nodes()))]
+
         nx.draw(
             G,
             pos,
             ax=ax,
             with_labels=True,
-            node_color="skyblue",
+            node_color=node_colors,
             node_size=800,
             edge_color="white",
         )
 
-        # draw edges src_nodes -> tgt_nodes
-        edgelist = [
-            (src_nodes[i].item(), tgt_nodes[i].item()) for i in range(len(src_nodes))
-        ]
+        edgelist = [(src_nodes[i].item(), tgt_nodes[i].item()) for i in range(len(src_nodes))]
         nx.draw_networkx_edges(
-            G, pos, ax=ax,edgelist=edgelist, width=2, alpha=1, edge_color="black"
+            G, pos, ax=ax, edgelist=edgelist, width=2, alpha=1, edge_color="black"
         )
