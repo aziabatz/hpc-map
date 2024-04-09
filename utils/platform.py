@@ -20,7 +20,9 @@ def get_accelerator(device):
     if device == "cuda":
         accelerator = "gpu"
     elif device == "mps":
-        accelerator = "cpu"  # "mps"
+        accelerator = "mps"
+    elif device == "cpu":
+        accelerator = "cpu"
     else:
         accelerator = "auto"
 

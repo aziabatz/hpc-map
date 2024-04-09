@@ -83,9 +83,9 @@ class MappingEnv(RL4COEnvBase):
         available = torch.ones(size=(*batch_size, self.num_procs), dtype=torch.bool).to(
             self.device
         )
-        current_machine = torch.zeros(*batch_size, dtype=torch.int32, device=device).to(
-            self.device
-        )
+        # current_machine = torch.zeros(*batch_size, dtype=torch.int32, device=device).to(
+        #     self.device
+        # )
 
         # The timestep
         i = torch.zeros((*batch_size, 1), dtype=torch.int64, device=device).to(
@@ -107,7 +107,7 @@ class MappingEnv(RL4COEnvBase):
                 "cost_matrix": cost_matrix,
                 "first_node": current_node,
                 "current_node": current_node,
-                "current_machine": current_machine,
+                #"current_machine": current_machine,
                 "i": i,
                 "action_mask": available,
                 "node_capacities": node_capacities,
@@ -316,7 +316,7 @@ class MappingEnv(RL4COEnvBase):
         )
     
     def get_num_starts(self, td:TensorDict):
-        return td.batch_size
+        return td.batch_size[0]
 
     @staticmethod
     def render(td, actions=None, ax=None):
@@ -342,10 +342,11 @@ class MappingEnv(RL4COEnvBase):
 
         # Plot with networkx
         G = nx.DiGraph(td["cost_matrix"].numpy())
-        pos = nx.spring_layout(G)
+        pos = nx.spring_layout(G, k=1)
         nx.draw(
             G,
             pos,
+            ax=ax,
             with_labels=True,
             node_color="skyblue",
             node_size=800,
@@ -357,5 +358,5 @@ class MappingEnv(RL4COEnvBase):
             (src_nodes[i].item(), tgt_nodes[i].item()) for i in range(len(src_nodes))
         ]
         nx.draw_networkx_edges(
-            G, pos, edgelist=edgelist, width=2, alpha=1, edge_color="black"
+            G, pos, ax=ax,edgelist=edgelist, width=2, alpha=1, edge_color="black"
         )

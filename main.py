@@ -32,6 +32,9 @@ from lightning.pytorch.loggers import WandbLogger
 from utils.hydra import instantiate_callbacks, instantiate_loggers
 from utils.platform import get_device, get_accelerator
 from utils.logger import get_pylogger
+from utils.plot import plot
+
+from rl4co.models.zoo.matnet import MatNetPolicy, MatNet
 
 MAX_PROCESS = 8
 MAX_NODES = 4
@@ -48,7 +51,7 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     accelerator = get_accelerator(device)
     print(f"Using platform {device} with accelerator {accelerator}")
 
-    wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
+    #wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
 
     env: MappingEnv = hydra.utils.instantiate(cfg.env, device=device)
 
@@ -94,17 +97,23 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     # )
 
-    policy = DeepACOPolicy(
-        env_name=env.name,
-        init_embedding=n2v_init,
-        context_embedding=context,
-        dynamic_embedding=dynamic,  # StaticEmbedding(),
+    policy = MatNetPolicy(
+        "atsp",
         embedding_dim=EMBEDDING_SIZE,
-        
     )
 
     log.info(f"Init model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model, env, policy=policy)
+
+    ######################### GREEDY UNTRAINED MODEL ######################
+
+    td_init = env.reset(batch_size=[2]).to(device)
+    model = model.to(device)
+    out = model(td_init.clone(), phase="test", decode_type="greedy", return_actions=True)
+    untrained = out['actions'].cpu().detach()
+    rew_untrained = out['reward'].cpu().detach()
+
+    #######################################################################
 
     log.info("Init callbacks...")
     callbacks: List[Callback] = instantiate_callbacks(cfg.get("callbacks"))
@@ -145,13 +154,21 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
         if ckpt_path == "":
             log.warning("Best ckpt not found! Using current weights for testing...")
             ckpt_path = None
-        trainer.test(model=model, ckpt_path=ckpt_path)
+        trainer.test(model=model, ckpt_path=ckpt_path, verbose=True)
         log.info(f"Best ckpt path: {ckpt_path}")
 
     test_metrics = trainer.callback_metrics
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
+
+
+    td_init = env.reset(batch_size=[2])
+    out = model(td_init.clone(), phase="test", decode_type="greedy", return_actions=True)
+    trained = out['actions'].cpu().detach()
+    rew_trained = out['reward'].cpu().detach()
+    plot(td_init, env, trained, rew_trained, untrained, rew_untrained)
+
 
     return metric_dict, object_dict
 
