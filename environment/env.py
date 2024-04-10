@@ -1,6 +1,9 @@
 from typing import Optional
 
 import torch
+import networkx as nx
+import numpy as np
+import matplotlib.pyplot as plt
 
 from tensordict.tensordict import TensorDict
 from torchrl.data import (
@@ -266,16 +269,22 @@ class MappingEnv(RL4COEnvBase):
         #reward = torch.sum(reward, dim=(1, 2))
         batch_size = cost_matrix.size(0)
 
-        worst = torch.sum(cost_matrix, dim=(1,2)).view(batch_size)
+        worst = torch.sum(cost_matrix, dim=(1,2), dtype=torch.float).view(batch_size)
         # print(worst)
         # print(cost_matrix[0])
         
         #prevent inf's
-        epsilon = 1e-8
-        masked_costs_sum = torch.sum(masked_costs, dim=(1,2))
+        epsilon = 1e-9
+        masked_costs_sum = torch.sum(masked_costs, dim=(1,2), dtype=torch.float)
+        masked_costs_sum+=epsilon
+        worst+=epsilon
         #reward = worst/(masked_costs_sum+epsilon)
-        reward = -masked_costs_sum
-        # print(reward[0])
+        reward = -masked_costs_sum/worst
+        #print(masked_costs_sum, worst)
+        # print("costsum", masked_costs_sum)
+        # print("worst", worst)
+        
+        # print(reward)
         #reward = torch.sum(reward, dim=(1,2))
 
         return reward.type(torch.float)
@@ -320,54 +329,6 @@ class MappingEnv(RL4COEnvBase):
 
     @staticmethod
     def render(td, actions=None, ax=None):
-        # try:
-        #     import networkx as nx
-        # except ImportError:
-        #     log.warn(
-        #         "Networkx is not installed. Please install it with `pip install networkx`"
-        #     )
-        #     return
-
-        # td = td.detach().cpu()
-        # if actions is None:
-        #     actions = td.get("action", None)
-
-        # # if batch_size greater than 0 , we need to select the first batch element
-        # if td.batch_size != torch.Size([]):
-        #     td = td[0]
-        #     actions = actions[0]
-
-        # src_nodes = actions
-        # tgt_nodes = torch.roll(actions, 1, dims=0)
-
-        # # Plot with networkx
-        # G = nx.DiGraph(td["cost_matrix"].numpy())
-        # pos = nx.spring_layout(G, k=1)
-        # nx.draw(
-        #     G,
-        #     pos,
-        #     ax=ax,
-        #     with_labels=True,
-        #     node_color="skyblue",
-        #     node_size=800,
-        #     edge_color="white",
-        # )
-
-        # # draw edges src_nodes -> tgt_nodes
-        # edgelist = [
-        #     (src_nodes[i].item(), tgt_nodes[i].item()) for i in range(len(src_nodes))
-        # ]
-        # nx.draw_networkx_edges(
-        #     G, pos, ax=ax,edgelist=edgelist, width=2, alpha=1, edge_color="black"
-        # )
-
-        try:
-            import networkx as nx
-            import numpy as np
-            import matplotlib.pyplot as plt
-        except ImportError:
-            log.warn("Networkx is not installed. Please install it with `pip install networkx`")
-            return
 
         td = td.detach().cpu()
         if actions is None:
@@ -380,8 +341,21 @@ class MappingEnv(RL4COEnvBase):
         src_nodes = actions
         tgt_nodes = torch.roll(actions, 1, dims=0)
 
+        log.info(td['cost_matrix'].cpu())
+
         G = nx.DiGraph(td["cost_matrix"].numpy())
-        pos = nx.spring_layout(G, k=1)
+        
+
+        edge_labels = nx.get_edge_attributes(G, 'weight')
+        for k, v in edge_labels.items():
+                edge_labels[k] = float(str(f"{v:.2f}"))
+        negated_edge_labels = {k: -v for k, v in edge_labels.items()}
+        inverse_edge_labels = {k: 1/v if v != 0 else 0 for k, v in edge_labels.items()}
+        inverse_edge_labels = [(u, v, w) for (u, v), w in inverse_edge_labels.items()]
+        #G.add_weighted_edges_from(ebunch_to_add=negated_edge_labels, str="negated")
+        G.add_weighted_edges_from(ebunch_to_add=inverse_edge_labels, str="inverse")
+
+        pos = nx.spring_layout(G, weight="inverse")
 
         num_clusters = len(G.nodes()) // 2
         colors = plt.cm.tab20(np.linspace(0, 1, num_clusters))
@@ -393,11 +367,14 @@ class MappingEnv(RL4COEnvBase):
             ax=ax,
             with_labels=True,
             node_color=node_colors,
-            node_size=800,
-            edge_color="white",
+            node_size=200,
+            edge_color="black",
         )
 
-        edgelist = [(src_nodes[i].item(), tgt_nodes[i].item()) for i in range(len(src_nodes))]
-        nx.draw_networkx_edges(
-            G, pos, ax=ax, edgelist=edgelist, width=2, alpha=1, edge_color="black"
-        )
+        
+
+        # edgelist = [(src_nodes[i].item(), tgt_nodes[i].item()) for i in range(len(src_nodes))]
+        # nx.draw_networkx_edges(
+        #     G, pos, ax=ax, edgelist=edgelist, width=2, alpha=1, edge_color="black"
+        # )
+        nx.draw_networkx_edge_labels(G, pos, ax=ax, edge_labels=edge_labels, alpha=1)
