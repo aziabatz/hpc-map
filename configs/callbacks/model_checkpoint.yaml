@@ -1,0 +1,13 @@
+
+model_checkpoint:
+  _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  dirpath: ${paths.output_dir}/checkpoints
+  filename: "epoch_{epoch:03d}"
+  monitor: 'val/reward'
+  verbose: True # verbosity mode
+  save_top_k: 1 # save k best models (determined by above metric)
+  mode: "max" # "max" means higher metric value is better, can be also "min"
+  save_last: True
+  auto_insert_metric_name: True # when True, the checkpoints filenames will contain the metric name
+  save_weights_only: False # if True, then only the model’s weights will be saved
+  every_n_epochs: 1 # number of epochs between checkpoints
