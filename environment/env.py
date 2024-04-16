@@ -282,7 +282,7 @@ class MappingEnv(RL4COEnvBase):
         reward = -masked_costs_sum/worst
         #print(masked_costs_sum, worst)
         # print("costsum", masked_costs_sum)
-        # print("worst", worst)
+        # print("worst", worst) 
         
         # print(reward)
         #reward = torch.sum(reward, dim=(1,2))
@@ -338,6 +338,9 @@ class MappingEnv(RL4COEnvBase):
             td = td[0]
             actions = actions[0]
 
+        num_machines = td['node_capacities'].size(-1)
+        num_machines  = actions.size(-1)//num_machines
+
         src_nodes = actions
         tgt_nodes = torch.roll(actions, 1, dims=0)
 
@@ -357,24 +360,25 @@ class MappingEnv(RL4COEnvBase):
 
         pos = nx.spring_layout(G, weight="inverse")
 
-        num_clusters = len(G.nodes()) // 2
-        colors = plt.cm.tab20(np.linspace(0, 1, num_clusters))
-        node_colors = [colors[i // 2] for i in range(len(G.nodes()))]
+        nodes_array = src_nodes.numpy()
+        colors = plt.cm.tab10(np.linspace(0, 1, len(nodes_array)//num_machines))
+        node_color_dict = {}
+        node_color_dict = {}
+        for i in range(0, len(nodes_array), num_machines):
+            color = colors[i // num_machines]
+            for j in range(num_machines):
+                if i + j < len(nodes_array):
+                    node_color_dict[nodes_array[i + j]] = color
+            
 
         nx.draw(
             G,
             pos,
             ax=ax,
             with_labels=True,
-            node_color=node_colors,
+            node_color=[node_color_dict[node] for node in G.nodes()],
             node_size=200,
             edge_color="black",
         )
 
-        
-
-        # edgelist = [(src_nodes[i].item(), tgt_nodes[i].item()) for i in range(len(src_nodes))]
-        # nx.draw_networkx_edges(
-        #     G, pos, ax=ax, edgelist=edgelist, width=2, alpha=1, edge_color="black"
-        # )
         nx.draw_networkx_edge_labels(G, pos, ax=ax, edge_labels=edge_labels, alpha=1)
