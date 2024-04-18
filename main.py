@@ -33,6 +33,7 @@ from utils.hydra import instantiate_callbacks, instantiate_loggers
 from utils.platform import get_device, get_accelerator
 from utils.logger import get_pylogger
 from utils.plot import plot
+from eval_model import eval_mapping
 
 from rl4co.models.zoo.matnet import MatNetPolicy, MatNet
 
@@ -54,48 +55,9 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     #wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
 
     env: MappingEnv = hydra.utils.instantiate(cfg.env, device=device)
-
-    # EMBEDDING_SIZE = env.num_machines
-
-    n2v_init = MappingInitEmbedding(
-        embedding_dim=EMBEDDING_SIZE, linear_bias=True, device=device
-    )
-
-    context = MappingContextEmbedding(
-        step_context_dim=EMBEDDING_SIZE * 2,
-        embedding_dim=EMBEDDING_SIZE,
-        num_procs=env.num_procs,
-    )
-
-    dynamic = MappingDynamicEmbedding(
-        num_nodes=env.num_machines,
-        num_procs=env.num_procs,
-        embedding_dim=EMBEDDING_SIZE,
-    )
-
+    
     # TODO Get policy from hydra
 
-    # policy = MDAMPolicy(
-    #     env_name=env.name,
-    #     embedding_dim=EMBEDDING_SIZE
-    # )
-
-
-    # policy = AutoregressivePolicy(
-    #     env.name,
-    #     init_embedding=n2v_init,
-    #     context_embedding=context,
-    #     dynamic_embedding=StaticEmbedding(),
-    #     embedding_dim=EMBEDDING_SIZE,
-    #     num_heads=8,
-    #     num_encoder_layers=4,
-    #     mask_inner=False,
-    #     use_graph_context=True,
-    #     # train_decode_type="multistart_sampling",
-    #     # val_decode_type="multistart_greedy",
-    #     # test_decode_type="multistart_greedy",
-
-    # )
 
     policy = MatNetPolicy(
         "atsp",
@@ -103,7 +65,7 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     )
 
     log.info(f"Init model <{cfg.model._target_}>")
-    model: LightningModule = hydra.utils.instantiate(cfg.model, env, policy=policy)
+    model: LightningModule = hydra.utils.instantiate(cfg.model, env, policy=policy,)
 
     ######################### GREEDY UNTRAINED MODEL ######################
 
@@ -129,6 +91,7 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
         logger=logger,
         devices=1,
         accelerator=accelerator,
+        #auto_lr_find=True,
     )
 
     object_dict = {
@@ -168,7 +131,9 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     out = model(td_init, phase="test", decode_type="greedy", return_actions=True)
     trained = out['actions'].cpu().detach()
     rew_trained = out['reward'].cpu().detach()
-    plot(td_init, env, trained, rew_trained, untrained, rew_untrained)
+    #plot(td_init, env, trained, rew_trained, untrained, rew_untrained)
+
+    eval_mapping(model, ckpt_path, env)
 
     return metric_dict, object_dict
 

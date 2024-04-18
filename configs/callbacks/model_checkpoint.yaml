@@ -2,7 +2,8 @@
 model_checkpoint:
   _target_: lightning.pytorch.callbacks.ModelCheckpoint
   dirpath: ${paths.output_dir}/checkpoints
-  filename: "epoch_{epoch:03d}"
+  #filename: "epoch_{epoch:03d}"
+  filename: 'best_model'
   monitor: 'val/reward'
   verbose: True # verbosity mode
   save_top_k: 1 # save k best models (determined by above metric)

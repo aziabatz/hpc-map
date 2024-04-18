@@ -1,7 +1,7 @@
 
 root_dir: .
 
-data_dir: ${paths.root_dir}/dataset/
+data_dir: ${paths.root_dir}/data/
 
 log_dir: ${paths.root_dir}/logs/
 
