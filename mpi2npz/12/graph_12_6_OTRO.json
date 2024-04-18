@@ -1,0 +1,72 @@
+{
+	"Graph": {
+		"P":                     12,
+		"M":                     6,
+		"m":                     512,
+		"S":                     16384,
+		"root":                  0,
+		"node_names":            ["M0", "M1", "M2", "M3", "M4", "M5"],
+		"capacity":              [2, 2, 2, 2, 2, 2],
+		"net":                   "IB",
+		"comms": {
+			"edges":   [[ 0 , 3 ], [ 0 , 6 ], [ 0 , 11 ], [ 1 , 4 ], [ 1 , 7 ], [ 1 , 9 ], [ 2 , 5 ], [ 2 , 8 ], [ 2 , 10 ], [ 3 , 0 ], [ 3 , 9 ], [ 4 , 1 ], [ 4 , 10 ], [ 5 , 2 ], [ 5 , 11 ], [ 6 , 0 ], [ 6 , 9 ], [ 7 , 1 ], [ 7 , 10 ], [ 8 , 2 ], [ 8 , 11 ], [ 9 , 1 ], [ 9 , 3 ], [ 9 , 6 ], [ 10 , 2 ], [ 10 , 4 ], [ 10 , 7 ], [ 11 , 0 ], [ 11 , 5 ], [ 11 , 8 ]],
+			"volume":   [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1],
+			"n_msgs":   [25,  15,  5,  25,  15,  5,  25,  15,  5,  25,  15,  25,  15,  25,  15,  15,  25,  15,  25,  15,  25,  5,  15,  25,  5,  15,  25,  5,  15,  25],
+			"opt_nodes_feats":   {
+													 },
+			"opt_edges_feats":   {
+													 }
+		}
+	},
+
+	"Config": {
+		"reward_type":         "num_msgs",
+		"verbosity":             "NONE",
+		"verbosity_interval":   500
+	},
+
+	"Hyperparameters": {
+		"n_episodes":           10000,
+		"gamma":                0.97,
+		"alpha":                0.0001,
+		"K":                    10,
+	 	"Baseline": 	 	false
+	},
+
+	"Policy": {
+		"type":			            "PtrNet",
+		"optimizer":            "Adam",
+		"typecell":             "LSTM",
+		"n_outputs":            6,
+		"n_embed": 				128,
+		"n_hidden":             128,
+		"init_min":				-0.08,
+		"init_max":				0.08,
+		"node_selector":		"sampling"
+	},
+
+	"GNN": {
+		"type":                 "Node2Vec",
+		"dimensions":           128,
+		"n_walks":              100,
+		"walk_length":         3
+	},
+
+	"Output": {
+		"graph_file":           "./graph_12_6_OTRO.png",
+		"output_file":          "./graph_12_6_OTRO.json"
+	},
+
+	"Benchmark": {
+		"name":             "graph_12_6_OTRO",
+	  "description":      "Example of Graph with P=12 M=6 (OTRO)",
+		"exec":         		"./Env/tLop/graph_12_6_OTRO",
+		"opts":         		"./Env/tLop/graph_12_6_OTRO.json",
+		"collective":           "",
+		"algorithm":            "Graph-Based",
+		"platform":             "CIEMAT",
+		"n_iter":               1,
+		"optimal_mapping":      [0, 1, 2, 0, 1, 2, 4, 5, 6, 4, 5, 6],
+		"optimal_type":         "OTHER"
+	}
+}

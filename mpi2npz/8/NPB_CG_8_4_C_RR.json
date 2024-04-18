@@ -1,0 +1,206 @@
+{
+  "Graph": {
+    "P": 8,
+    "M": 4,
+    "m": 1048576,
+    "S": 16384,
+    "root": 0,
+    "node_names": [
+      "M0",
+      "M1",
+      "M2",
+      "M3"
+    ],
+    "capacity": [
+      2,
+      2,
+      2,
+      2
+    ],
+    "net": "IB",
+    "comms": {
+      "edges": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          3
+        ]
+      ],
+      "volume": [
+        592832832,
+        592832832,
+        592832832,
+        592832832,
+        592832832,
+        592832832,
+        592800000,
+        592832832,
+        592832832,
+        592800000,
+        592800000,
+        592832832,
+        592832832,
+        592800000,
+        592832832,
+        592832832,
+        592832832,
+        592832832,
+        592832832,
+        592832832
+      ],
+      "n_msgs": [
+        6004,
+        6004,
+        6004,
+        6004,
+        6004,
+        6004,
+        1976,
+        6004,
+        6004,
+        1976,
+        1976,
+        6004,
+        6004,
+        1976,
+        6004,
+        6004,
+        6004,
+        6004,
+        6004,
+        6004
+      ],
+      "opt_nodes_feats": {},
+      "opt_edges_feats": {}
+    }
+  },
+  "Config": {
+    "reward_type": "num_msgs",
+    "verbosity": "NONE",
+    "verbosity_interval": 500
+  },
+  "Hyperparameters": {
+    "n_episodes": 8000,
+    "gamma": 0.97,
+    "alpha": 0.0001,
+    "K": 10,
+    "Baseline": false
+  },
+  "Policy": {
+    "type": "PtrNet",
+    "optimizer": "Adam",
+    "typecell": "LSTM",
+    "n_outputs": 4,
+    "n_embed": 128,
+    "n_hidden": 128,
+    "init_min": -0.08,
+    "init_max": 0.08,
+    "node_selector": "sampling"
+  },
+  "GNN": {
+    "type": "Node2Vec",
+    "dimensions": 128,
+    "n_walks": 100,
+    "walk_length": 3
+  },
+  "Output": {
+    "graph_file": "./NPB_CG_8_4_C_RR.png",
+    "output_file": "./NPB_CG_8_4_C_RR.json"
+  },
+  "Benchmark": {
+		"name":             "NPB_CG_8_4_C_RR",
+	  "description":      "NAS Parallel Benchmark CG Class=C P=8 M=4 RR",
+    "exec": "./Env/tLop/npb_cg_8_4_C",
+    "opts": "./Env/tLop/NPB_CG_8_4_C.json",
+    "collective": "",
+    "algorithm": "Graph-Based",
+    "platform": "CIEMAT",
+    "n_iter": 1,
+    "optimal_mapping": [
+      0,
+      1,
+      2,
+      3,
+      0,
+      1,
+      2,
+      3
+    ],
+    "optimal_type": "RR"
+  }
+}

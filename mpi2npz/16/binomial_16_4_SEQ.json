@@ -1,0 +1,241 @@
+{
+  "Graph": {
+    "P": 16,
+    "M": 4,
+    "m": 1048576,
+    "S": 16384,
+    "root": 0,
+    "node_names": [
+      "M0",
+      "M1",
+      "M2",
+      "M3"
+    ],
+    "capacity": [
+      4,
+      4,
+      4,
+      4
+    ],
+    "net": "IB",
+    "comms": {
+      "edges": [
+        [
+          0,
+          8
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          8,
+          12
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          12,
+          14
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          12,
+          13
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          14,
+          15
+        ]
+      ],
+      "volume": [
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576,
+        1.048576
+      ],
+      "n_msgs": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "opt_nodes_feats": {
+        "root": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "depth": [
+          0,
+          1,
+          2,
+          2,
+          3,
+          3,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "opt_edges_feats": {
+        "auto": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "Config": {
+    "reward_type": "num_msgs",
+    "verbosity": "NONE",
+    "verbosity_interval": 500,
+    "Baseline": "None",
+    "device": "GPU"
+  },
+  "Hyperparameters": {
+    "n_episodes": 5000,
+    "gamma": 0.97,
+    "alpha": 0.0001,
+    "K": 10,
+    "Baseline": false
+  },
+  "Policy": {
+    "type": "PtrNet",
+    "optimizer": "Adam",
+    "typecell": "LSTM",
+    "n_outputs": 4,
+    "n_embed": 128,
+    "n_hidden": 128,
+    "init_min": -0.08,
+    "init_max": 0.08,
+    "node_selector": "sampling"
+  },
+  "GNN": {
+    "type": "Node2Vec",
+    "dimensions": 128,
+    "n_walks": 100,
+    "walk_length": 3
+  },
+  "Output": {
+    "graph_file": "./binomial_P16_M4_SEQ.png",
+    "output_file": "./binomial_P16_M4_SEQ.json"
+  },
+  "Benchmark": {
+    "name":             "binomial_16_4_SEQ",
+    "description":      "Open MPI Binomial Broadcast P=16 M=4 SEQ",
+    "exec": "./Env/tLop/bcast",
+    "opts": "./Env/tLop/binomial_bcast_16_4.json",
+    "collective": "MPI_Bcast",
+    "algorithm": "Graph-Based",
+    "platform": "CIEMAT",
+    "n_iter": 1,
+    "optimal_mapping": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      3,
+      3
+    ],
+    "optimal_type": "SEQ"
+  }
+}
