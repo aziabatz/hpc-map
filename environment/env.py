@@ -289,6 +289,26 @@ class MappingEnv(RL4COEnvBase):
 
         return reward.type(torch.float)
 
+    @staticmethod
+    def actions2placement(actions: torch.Tensor, num_machines: int, ):
+        #batched_actions_tensor = torch.tensor(actions) if not isinstance(actions, torch.Tensor) else actions
+    
+        batch_size, num_processes = actions.shape
+        procs_per_machine = (num_processes + num_machines - 1) // num_machines
+        placement = torch.zeros_like(actions, dtype=torch.int)
+        
+        for batch_idx in range(batch_size):
+            actions_batch = actions[batch_idx]
+
+            for i in range(num_processes):
+                # Index of process (actions order)
+                process_index = actions_batch.tolist().index(i)
+                # Get machine from action index
+                machine_id = process_index // procs_per_machine
+                placement[batch_idx, i] = machine_id
+
+        return placement
+
     def generate_data(self, batch_size, sparsity: float = None) -> TensorDict:
         
         batch_size = [batch_size] if isinstance(batch_size, int) else batch_size
