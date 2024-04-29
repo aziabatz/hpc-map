@@ -25,8 +25,6 @@ class MappingEnv(RL4COEnvBase):
 
     name = "mpimap"
 
-    # TODO Add node_capacities, total_placed, current_placement
-
     def __init__(
         self,
         num_procs: int = 32,
@@ -259,33 +257,30 @@ class MappingEnv(RL4COEnvBase):
         cost_matrix = td["cost_matrix"].clone()
         current_placement = td["current_placement"].clone()
 
+        reward = self.reward_from_placement(cost_matrix, current_placement)
+
+        return reward.type(torch.float)
+    
+    @staticmethod
+    def reward_from_placement(cost_matrix: torch.Tensor, current_placement:torch.Tensor, ):
+        
         same_machine_mask = current_placement.unsqueeze(2) == current_placement.unsqueeze(1)
-        #cost_matrix[same_machine_mask] = 0
         masked_costs = torch.where(same_machine_mask,
             torch.zeros_like(cost_matrix),
             cost_matrix)
 
-        #reward = -cost_matrix  # -total_communication_cost
-        #reward = torch.sum(reward, dim=(1, 2))
+        
         batch_size = cost_matrix.size(0)
 
         worst = torch.sum(cost_matrix, dim=(1,2), dtype=torch.float).view(batch_size)
-        # print(worst)
-        # print(cost_matrix[0])
-        
+
         #prevent inf's
         epsilon = 1e-9
         masked_costs_sum = torch.sum(masked_costs, dim=(1,2), dtype=torch.float)
         masked_costs_sum+=epsilon
         worst+=epsilon
-        #reward = worst/(masked_costs_sum+epsilon)
         reward = -masked_costs_sum/worst
-        #print(masked_costs_sum, worst)
-        # print("costsum", masked_costs_sum)
-        # print("worst", worst) 
-        
-        # print(reward)
-        #reward = torch.sum(reward, dim=(1,2))
+
 
         return reward.type(torch.float)
 

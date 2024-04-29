@@ -6,7 +6,7 @@ from rl4co.models.zoo.matnet import MatNetPolicy, MatNet
 from environment.env import MappingEnv
 
 
-def eval_mapping(model: MatNet, ckpt: str, env:MappingEnv):
+def eval_mapping(model: MatNet, ckpt: str, env:MappingEnv, optimals: torch.Tensor, cost_matrix: torch.Tensor):
 
     model = MatNet.load_from_checkpoint(ckpt)
     
@@ -18,9 +18,15 @@ def eval_mapping(model: MatNet, ckpt: str, env:MappingEnv):
     td_init_generalization = env.reset(init_states)
 
     out = model(td_init_generalization.clone(), phase="test", decode_type="greedy", return_actions=True)
+    num_machines = env.num_machines
 
-    print(f"Comm. cost: {[f'{-r.item():.2f}' for r in out['reward']]}")
+    rewards = out['reward']
+
+    print(f"Comm. cost: {[f'{-r.item():.2f}' for r in rewards]}")
     for td, actions in zip(td_init_generalization, out['actions'].cpu()):
         env.render(td, actions)
+        
+    optimals_rewards = env.reward_from_placement(cost_matrix, optimals)
+    print("Model rewards: ", rewards, "Optimal rewards: ", optimals_rewards)
 
     pass

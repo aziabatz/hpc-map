@@ -7,6 +7,7 @@ from rl4co.models import MDAMPolicy
 
 import wandb
 import hydra
+import numpy as np
 
 # Para ir guardando el mejor modelo hasta ahora
 from lightning.pytorch.callbacks import ModelCheckpoint
@@ -133,7 +134,13 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     rew_trained = out['reward'].cpu().detach()
     #plot(td_init, env, trained, rew_trained, untrained, rew_untrained)
 
-    eval_mapping(model, ckpt_path, env)
+    optimals = np.load(env.test_file)['optimals']
+    cost_matrix = np.load(env.test_file)['cost_matrix']
+
+    optimals = torch.from_numpy(optimals)
+    cost_matrix = torch.from_numpy(cost_matrix)
+
+    eval_mapping(model, ckpt_path, env, optimals, cost_matrix)
 
     return metric_dict, object_dict
 

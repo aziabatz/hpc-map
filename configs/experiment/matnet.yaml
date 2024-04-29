@@ -15,7 +15,7 @@ env:
 
   data_dir: ${paths.root_dir}/data/mpi
   #val_file: all_${env.num_procs}.npz
-  test_file: all_${env.num_procs}.npz
+  test_file: all_${env.num_procs}_${env.num_machines}.npz
 
 logger:
   wandb:
