@@ -1,0 +1,3 @@
+[submodule "mpi2npz"]
+	path = mpi2npz
+	url = git@github.com:aziabatz/mpi2npz.git
