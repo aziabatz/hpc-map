@@ -28,5 +28,4 @@ def eval_mapping(model: MatNet, ckpt: str, env:MappingEnv, optimals: torch.Tenso
         
     optimals_rewards = env.reward_from_placement(cost_matrix, optimals)
     print("Model rewards: ", rewards, "Optimal rewards: ", optimals_rewards)
-
-    pass
+    print("Model mapping against optimal mapping (improvement 1-scale):", (optimals_rewards/rewards))
