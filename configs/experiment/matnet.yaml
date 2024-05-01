@@ -15,7 +15,7 @@ env:
 
   data_dir: ${paths.root_dir}/data/mpi
   #val_file: all_${env.num_procs}.npz
-  test_file: all_${env.num_procs}_${env.num_machines}.npz
+  test_file: ${env.num_procs}_${env.num_machines}.npz
 
 logger:
   wandb:
@@ -28,12 +28,12 @@ model:
 #  mode: "Random"
   batch_size: 2
   val_batch_size: 2
-  test_batch_size: 2
+  test_batch_size: 1
   train_data_size: 32
   val_data_size: 16
-  test_data_size: 16
+  # test_data_size: 16
   optimizer:
-    "RAdam"
+    "Adam"
   optimizer_kwargs:
     lr: 1.5e-4
     weight_decay: 0

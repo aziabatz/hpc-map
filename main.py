@@ -112,6 +112,9 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
         trainer.fit(model=model, ckpt_path=cfg.get("ckpt_path"))
 
         train_metrics = trainer.callback_metrics
+    
+
+    model = model.to(device)
 
     if cfg.get("test"):
         log.info("Starting testing!")
@@ -127,7 +130,7 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
 
-
+    model = model.to(device)
     td_init = td_init0.clone() #env.reset(batch_size=[])
     out = model(td_init, phase="test", decode_type="greedy", return_actions=True)
     trained = out['actions'].cpu().detach()
