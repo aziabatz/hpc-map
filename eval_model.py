@@ -2,8 +2,11 @@ import rl4co
 import torch
 from rl4co.models.rl.common.base import RL4COLitModule
 from rl4co.models.zoo.matnet import MatNetPolicy, MatNet
-
+from rl4co.utils.pylogger import get_pylogger
 from environment.env import MappingEnv
+
+log = get_pylogger(__name__)
+
 
 
 def eval_mapping(model: MatNet, ckpt: str, env:MappingEnv, optimals: torch.Tensor, cost_matrix: torch.Tensor):
@@ -21,12 +24,19 @@ def eval_mapping(model: MatNet, ckpt: str, env:MappingEnv, optimals: torch.Tenso
     out = model(td_init_generalization.clone(), phase="test", decode_type="greedy", return_actions=True)
     num_machines = env.num_machines
 
+    actions = out['actions'].cpu().detach()
     rewards = out['reward'].cpu().detach()
 
-    print(f"Comm. cost: {[f'{-r.item():.2f}' for r in rewards]}")
-    for td, actions in zip(td_init_generalization, out['actions'].cpu()):
-        env.render(td, actions)
-        
-    optimals_rewards = env.reward_from_placement(cost_matrix, optimals)
-    print("Model rewards: ", rewards, "Optimal rewards: ", optimals_rewards)
-    print("Model mapping against optimal mapping (improvement 1-scale):", (optimals_rewards/rewards))
+    optimal_placements = optimals
+    model_placements = env.actions2placement(actions, num_machines)
+    optimal_rewards = env.reward_from_placement(cost_matrix, optimal_placements)
+    model_rewards = rewards
+
+    for model_mapping, optimal_mapping, model_reward, optimal_reward in zip(model_placements, optimal_placements, model_rewards, optimal_rewards):
+        score = optimal_reward/model_reward
+        log.info(f"===================\nModel Mapping: {model_mapping} Optimal Mapping: {optimal_mapping}\nModel Reward: {model_reward} Optimal Reward: {optimal_reward}\nScore (optimal/model ratio): {score}\n===================")
+    
+
+    # print(f"Comm. cost: {[f'{-r.item():.2f}' for r in rewards]}")
+    # for td, actions, optimal in zip(td_init_generalization, out['actions'].cpu(), optimals):
+    #     placement = env.actions2placement(actions, num_machines)
