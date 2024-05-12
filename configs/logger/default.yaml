@@ -1,5 +1,4 @@
 
 defaults:
-
   - tensorboard.yaml
-  - wandb.yaml
+  #  - wandb.yaml

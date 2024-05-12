@@ -36,7 +36,8 @@ from utils.logger import get_pylogger
 from utils.plot import plot
 from eval_model import eval_mapping
 
-from rl4co.models.zoo.matnet import MatNetPolicy, MatNet
+from rl4co.models.zoo.matnet import  MatNet
+from rl4co.models.zoo.matnetcaps import MatNetCapsPolicy
 
 MAX_PROCESS = 8
 MAX_NODES = 4
@@ -60,7 +61,7 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     # TODO Get policy from hydra
 
 
-    policy = MatNetPolicy(
+    policy = MatNetCapsPolicy(
         "atsp",
         embedding_dim=EMBEDDING_SIZE,
     )

@@ -4,7 +4,7 @@
 defaults:
   - _self_
   - callbacks: default.yaml
-  - logger: wandb.yaml
+  - logger: default.yaml #wandb.yaml
   - trainer: default.yaml
   - paths: default.yaml
   - model: default.yaml
