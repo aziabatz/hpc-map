@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 
 from utils.logger import get_pylogger
 from lightning.pytorch.callbacks.lr_monitor import LearningRateMonitor
-
+from lightning.pytorch.callbacks.rich_model_summary import RichModelSummary
 
 log = get_pylogger(__name__)
 
@@ -16,8 +16,9 @@ def instantiate_callbacks(callbacks_cfg: DictConfig) -> List[Callback]:
     """Instantiates callbacks from config."""
 
     lrmont = LearningRateMonitor(logging_interval='epoch')
+    rich_model_sum = RichModelSummary(max_depth=10)
 
-    callbacks: List[Callback] = [lrmont]
+    callbacks: List[Callback] = [lrmont, rich_model_sum]
 
     if not callbacks_cfg:
         log.warning("No callback configs found! Skipping..")

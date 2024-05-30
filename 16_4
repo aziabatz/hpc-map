@@ -1,0 +1,75 @@
+[2024-05-16 10:56:33,767][eval_model][INFO] - ===================
+Model Mapping: tensor([2, 1, 1, 2, 1, 0, 0, 3, 0, 3, 3, 2, 0, 2, 3, 1], dtype=torch.int32) Optimal Mapping: tensor([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3], dtype=torch.int32)
+Model Reward: -0.982309103012085 Optimal Reward: -0.10614524781703949
+Score (optimal/model ratio): 0.10805687308311462
+===================
+[2024-05-16 10:56:33,768][eval_model][INFO] - ===================
+Model Mapping: tensor([3, 3, 3, 0, 1, 0, 0, 1, 1, 1, 2, 0, 2, 3, 2, 2], dtype=torch.int32) Optimal Mapping: tensor([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3], dtype=torch.int32)
+Model Reward: -0.7903226017951965 Optimal Reward: -0.32258063554763794
+Score (optimal/model ratio): 0.40816324949264526
+===================
+[2024-05-16 10:56:33,768][eval_model][INFO] - ===================
+Model Mapping: tensor([1, 3, 3, 1, 3, 0, 2, 0, 2, 1, 0, 2, 3, 1, 2, 0], dtype=torch.int32) Optimal Mapping: tensor([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3], dtype=torch.int32)
+Model Reward: -0.9354838728904724 Optimal Reward: -0.32258063554763794
+Score (optimal/model ratio): 0.3448275625705719
+===================
+[2024-05-16 10:56:33,769][eval_model][INFO] - ===================
+Model Mapping: tensor([2, 0, 0, 1, 0, 2, 2, 2, 1, 3, 1, 3, 0, 3, 1, 3], dtype=torch.int32) Optimal Mapping: tensor([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3], dtype=torch.int32)
+Model Reward: -0.8666666746139526 Optimal Reward: -0.20000000298023224
+Score (optimal/model ratio): 0.23076923191547394
+===================
+[2024-05-16 10:56:33,769][eval_model][INFO] - ===================
+Model Mapping: tensor([3, 3, 0, 3, 1, 0, 1, 1, 3, 2, 2, 2, 2, 0, 1, 0], dtype=torch.int32) Optimal Mapping: tensor([1, 1, 2, 2, 1, 1, 2, 3, 0, 0, 3, 3, 0, 0, 3, 2], dtype=torch.int32)
+Model Reward: -0.8125 Optimal Reward: -0.5833333134651184
+Score (optimal/model ratio): 0.7179486751556396
+===================
+[2024-05-16 10:56:33,770][eval_model][INFO] - ===================
+Model Mapping: tensor([3, 1, 0, 0, 3, 1, 2, 0, 3, 1, 2, 0, 3, 2, 2, 1], dtype=torch.int32) Optimal Mapping: tensor([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3], dtype=torch.int32)
+Model Reward: -0.44134077429771423 Optimal Reward: -0.10614524781703949
+Score (optimal/model ratio): 0.24050632119178772
+===================
+[2024-05-16 10:56:33,770][eval_model][INFO] - ===================
+Model Mapping: tensor([0, 0, 3, 3, 1, 1, 0, 3, 0, 1, 1, 2, 2, 2, 2, 3], dtype=torch.int32) Optimal Mapping: tensor([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3], dtype=torch.int32)
+Model Reward: -0.7333333492279053 Optimal Reward: -0.20000000298023224
+Score (optimal/model ratio): 0.27272728085517883
+===================
+
+
+
+[2024-05-16 10:56:34,861][rl4co.envs.common.base][INFO] - Loading test dataset from ./data/mpi/16_4.npz
+[2024-05-16 10:56:34,988][eval_model][INFO] - ===================
+Model Mapping: tensor([3, 3, 0, 3, 0, 0, 0, 1, 1, 1, 1, 2, 3, 2, 2, 2], dtype=torch.int32) Optimal Mapping: tensor([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3], dtype=torch.int32)
+Model Reward: -0.517690896987915 Optimal Reward: -0.10614524781703949
+Score (optimal/model ratio): 0.2050359547138214
+===================
+[2024-05-16 10:56:34,988][eval_model][INFO] - ===================
+Model Mapping: tensor([0, 2, 3, 0, 0, 0, 1, 3, 1, 1, 1, 3, 2, 3, 2, 2], dtype=torch.int32) Optimal Mapping: tensor([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3], dtype=torch.int32)
+Model Reward: -0.8588709831237793 Optimal Reward: -0.32258063554763794
+Score (optimal/model ratio): 0.3755868375301361
+===================
+[2024-05-16 10:56:34,989][eval_model][INFO] - ===================
+Model Mapping: tensor([0, 0, 0, 3, 1, 1, 0, 2, 1, 2, 2, 1, 3, 3, 2, 3], dtype=torch.int32) Optimal Mapping: tensor([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3], dtype=torch.int32)
+Model Reward: -0.7056451439857483 Optimal Reward: -0.32258063554763794
+Score (optimal/model ratio): 0.4571428596973419
+===================
+[2024-05-16 10:56:34,990][eval_model][INFO] - ===================
+Model Mapping: tensor([0, 0, 0, 1, 2, 1, 1, 1, 0, 2, 2, 2, 3, 3, 3, 3], dtype=torch.int32) Optimal Mapping: tensor([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3], dtype=torch.int32)
+Model Reward: -0.46666666865348816 Optimal Reward: -0.20000000298023224
+Score (optimal/model ratio): 0.4285714328289032
+===================
+[2024-05-16 10:56:34,990][eval_model][INFO] - ===================
+Model Mapping: tensor([0, 2, 2, 2, 2, 3, 3, 0, 0, 0, 1, 3, 1, 3, 1, 1], dtype=torch.int32) Optimal Mapping: tensor([1, 1, 2, 2, 1, 1, 2, 3, 0, 0, 3, 3, 0, 0, 3, 2], dtype=torch.int32)
+Model Reward: -0.8125 Optimal Reward: -0.5833333134651184
+Score (optimal/model ratio): 0.7179486751556396
+===================
+[2024-05-16 10:56:34,990][eval_model][INFO] - ===================
+Model Mapping: tensor([0, 0, 1, 0, 0, 1, 1, 2, 2, 3, 3, 3, 1, 2, 2, 3], dtype=torch.int32) Optimal Mapping: tensor([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3], dtype=torch.int32)
+Model Reward: -0.7970204949378967 Optimal Reward: -0.10614524781703949
+Score (optimal/model ratio): 0.13317756354808807
+===================
+[2024-05-16 10:56:34,991][eval_model][INFO] - ===================
+Model Mapping: tensor([3, 0, 0, 0, 0, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3], dtype=torch.int32) Optimal Mapping: tensor([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3], dtype=torch.int32)
+Model Reward: -0.9333333373069763 Optimal Reward: -0.20000000298023224
+Score (optimal/model ratio): 0.2142857164144516
+===================
+

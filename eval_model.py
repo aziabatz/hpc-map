@@ -40,3 +40,5 @@ def eval_mapping(model: MatNet, ckpt: str, env:MappingEnv, optimals: torch.Tenso
     # print(f"Comm. cost: {[f'{-r.item():.2f}' for r in rewards]}")
     # for td, actions, optimal in zip(td_init_generalization, out['actions'].cpu(), optimals):
     #     placement = env.actions2placement(actions, num_machines)
+
+

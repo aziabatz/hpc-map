@@ -340,7 +340,7 @@ class MappingEnv(RL4COEnvBase):
         )
     
     def get_num_starts(self, td:TensorDict):
-        return td.batch_size[0]
+        return td.batch_size[0] * 2
 
     @staticmethod
     def render(td, actions=None, ax=None):

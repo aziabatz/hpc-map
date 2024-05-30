@@ -54,8 +54,8 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     accelerator = get_accelerator(device)
     print(f"Using platform {device} with accelerator {accelerator}")
 
-    cfg.model.train_data_size = cfg.model.batch_size * 100
-    cfg.model.val_data_size = cfg.model.val_batch_size * 100
+    #cfg.model.train_data_size = cfg.model.batch_size * 100
+    #cfg.model.val_data_size = cfg.model.val_batch_size * 100
 
     #wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
 
@@ -66,7 +66,9 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
 
     policy = MatNetCapsPolicy(
         "atsp",
-        embedding_dim=EMBEDDING_SIZE,
+        #embedding_dim=EMBEDDING_SIZE,
+        num_encoder_layers=20,
+        #init_embedding_kwargs={"mode": "Random"}
     )
 
     log.info(f"Init model <{cfg.model._target_}>")
@@ -123,11 +125,16 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.get("test"):
         log.info("Starting testing!")
         ckpt_path = trainer.checkpoint_callback.best_model_path
+        last_path = trainer.checkpoint_callback.last_model_path
         if ckpt_path == "":
             log.warning("Best ckpt not found! Using current weights for testing...")
             ckpt_path = None
-        trainer.test(model=model, ckpt_path=ckpt_path, verbose=True)
         log.info(f"Best ckpt path: {ckpt_path}")
+        log.info("Testing with best model...")
+        trainer.test(model=model, ckpt_path=ckpt_path, verbose=True)
+        log.info(f"Last ckpt path: {last_path}")
+        log.info("Testing with last model...")
+        trainer.test(model=model, ckpt_path=last_path, verbose=True)
 
     test_metrics = trainer.callback_metrics
 
@@ -147,7 +154,11 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     optimals = torch.from_numpy(optimals)
     cost_matrix = torch.from_numpy(cost_matrix)
 
+    log.info(f"Evaluation with best model in {ckpt_path}")
     eval_mapping(model, ckpt_path, env, optimals, cost_matrix)
+
+    log.info(f"Evaluation with last model in {last_path}")
+    eval_mapping(model, last_path, env, optimals, cost_matrix)
 
     return metric_dict, object_dict
 
