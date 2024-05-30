@@ -47,6 +47,17 @@
                 "experiment=matnet"
             ],
             "justMyCode": false
+        },
+        {
+            "name": "MatNetCaps experiment",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "experiment=matnetcaps"
+            ],
+            "justMyCode": false
         }
     ]
 }

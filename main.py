@@ -54,23 +54,23 @@ def run(cfg: DictConfig) -> Tuple[dict, dict]:
     accelerator = get_accelerator(device)
     print(f"Using platform {device} with accelerator {accelerator}")
 
-    cfg.model.train_data_size = cfg.model.batch_size * 100
-    cfg.model.val_data_size = cfg.model.val_batch_size * 100
-
-    #wandb.login(key="55f9a8ce70d0e929d10a9f52c2ff146e8dbd7911")
+    print(cfg)
 
     env: MappingEnv = hydra.utils.instantiate(cfg.env, device=device)
     
-    # TODO Get policy from hydra
+    log.info(f"Init policy <{cfg.policy._target_}>")
 
+    policy = hydra.utils.instantiate(cfg.policy)
 
-    policy = MatNetCapsPolicy(
-        "atsp",
-        embedding_dim=EMBEDDING_SIZE,
-    )
+    # policy = MatNetCapsPolicy(
+    #     "atsp",
+    #     embedding_dim=EMBEDDING_SIZE,
+    #     num_encoder_layers=10,
+        
+    # )
 
     log.info(f"Init model <{cfg.model._target_}>")
-    model: LightningModule = hydra.utils.instantiate(cfg.model, env, policy=policy,)
+    model: LightningModule = hydra.utils.instantiate(cfg.model, env, policy=policy)
 
     ######################### GREEDY UNTRAINED MODEL ######################
 
